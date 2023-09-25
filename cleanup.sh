@@ -22,7 +22,3 @@ export AWS_DEFAULT_REGION=$region
 
 ${SCRIPTDIR}/terraform/codecommit/destroy.sh
 rm -rf ${SCRIPTDIR}/codecommit
-
-
-
-

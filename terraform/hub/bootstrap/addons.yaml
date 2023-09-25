@@ -27,4 +27,5 @@ spec:
         namespace: 'argocd'
         name: '{{name}}'
       syncPolicy:
-        automated: {}
+        automated:
+          allowEmpty: true

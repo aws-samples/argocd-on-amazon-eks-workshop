@@ -24,8 +24,12 @@ ${SCRIPTDIR}/terraform/codecommit/deploy.sh
 gitops_workload_url="$(terraform -chdir=${SCRIPTDIR}/terraform/codecommit output -raw gitops_workload_url)"
 git clone ${gitops_workload_url} ${SCRIPTDIR}/codecommit || true
 mkdir -p ${SCRIPTDIR}/codecommit/addons
-mkdir -p ${SCRIPTDIR}/codecommit/platform
-touch ${SCRIPTDIR}/codecommit/platform/.keep
+mkdir -p ${SCRIPTDIR}/codecommit/platform/control-plane
+touch ${SCRIPTDIR}/codecommit/platform/control-plane/.keep
+mkdir -p ${SCRIPTDIR}/codecommit/platform/staging
+touch ${SCRIPTDIR}/codecommit/platform/staging/.keep
+mkdir -p ${SCRIPTDIR}/codecommit/platform/prod
+touch ${SCRIPTDIR}/codecommit/platform/prod/.keep
 mkdir -p ${SCRIPTDIR}/codecommit/apps
 touch ${SCRIPTDIR}/codecommit/apps/.keep
 cp -r ${SCRIPTDIR}/gitops/addons ${SCRIPTDIR}/codecommit/

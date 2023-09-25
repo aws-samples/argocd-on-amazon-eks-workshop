@@ -129,9 +129,9 @@ locals {
   )
 
   argocd_apps = {
-    #addons = file("${path.module}/bootstrap/addons.yaml")
-    #platform = file("${path.module}/bootstrap/platform.yaml")
-    #workloads = file("${path.module}/bootstrap/workloads.yaml")
+    addons = file("${path.module}/bootstrap/addons.yaml")
+    platform = file("${path.module}/bootstrap/platform.yaml")
+    workloads = file("${path.module}/bootstrap/workloads.yaml")
   }
 
   azs = slice(data.aws_availability_zones.available.names, 0, 3)

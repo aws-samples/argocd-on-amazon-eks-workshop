@@ -39,7 +39,8 @@ spec:
         namespace: '{{app}}'
         name: '{{name}}'
       syncPolicy:
-        automated: {}
+        automated:
+          allowEmpty: true
         retry:
           backoff:
             duration: 1m
