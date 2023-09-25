@@ -6,7 +6,6 @@ locals {
   }
   gitops_workload_org = "ssh://${aws_iam_user_ssh_key.gitops.id}@git-codecommit.${data.aws_region.current.id}.amazonaws.com"
   gitops_workload_repo = "v1/repos/${local.addon_context.eks_cluster_id}-argocd"
-  gitops_workload_url = "${local.gitops_workload_org}/${local.gitops_workload_repo}"
   ssh_key_basepath = var.ssh_key_basepath
   git_private_ssh_key = "${local.ssh_key_basepath}/gitops_ssh.pem"
   git_private_ssh_key_config = "${local.ssh_key_basepath}/config"
