@@ -19,6 +19,8 @@ popd () {
 read -p "Enter the region: " region
 export AWS_DEFAULT_REGION=$region
 
-
+${SCRIPTDIR}/terraform/spokes/destroy.sh prod
+${SCRIPTDIR}/terraform/spokes/destroy.sh staging
+${SCRIPTDIR}/terraform/hub/destroy.sh
 ${SCRIPTDIR}/terraform/codecommit/destroy.sh
 rm -rf ${SCRIPTDIR}/codecommit
