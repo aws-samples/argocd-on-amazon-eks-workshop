@@ -3,7 +3,7 @@
 set -euo pipefail
 
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-ROOTDIR="$(cd ${SCRIPTDIR}/..; pwd )"
+ROOTDIR="$(cd ${SCRIPTDIR}/../..; pwd )"
 [[ -n "${DEBUG:-}" ]] && set -x
 
 
@@ -22,10 +22,6 @@ if [[ $# -eq 0 ]] ; then
     exit 1
 fi
 env=$1
-
-
-#read -p "Enter the region: " region
-#export AWS_DEFAULT_REGION=$region
 
 pushd ${SCRIPTDIR}
 

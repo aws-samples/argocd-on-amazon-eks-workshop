@@ -19,9 +19,6 @@ popd () {
 # For AWS EC2 override with
 # export TF_VAR_ssh_key_basepath="/home/ec2-user/.ssh"
 
-#read -p "Enter the region: " region
-#export AWS_DEFAULT_REGION=$region
-
 pushd ${SCRIPTDIR}
 
 echo "Destroying AWS git resources"
@@ -33,3 +30,6 @@ else
   echo "FAILED: Terraform destroy of all targets failed"
   exit 1
 fi
+
+
+popd

@@ -1,5 +1,21 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
+set -euo pipefail
+
+SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ROOTDIR="$(cd ${SCRIPTDIR}/../..; pwd )"
+[[ -n "${DEBUG:-}" ]] && set -x
+
+
+pushd () {
+    command pushd "$@" > /dev/null
+}
+
+popd () {
+    command popd "$@" > /dev/null
+}
+
+pushd ${SCRIPTDIR}
 
 if [[ $# -eq 0 ]] ; then
     echo "No arguments supplied"

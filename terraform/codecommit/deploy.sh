@@ -3,7 +3,7 @@
 set -euo pipefail
 
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-ROOTDIR="$(cd ${SCRIPTDIR}/..; pwd )"
+ROOTDIR="$(cd ${SCRIPTDIR}/../..; pwd )"
 [[ -n "${DEBUG:-}" ]] && set -x
 
 
@@ -15,13 +15,6 @@ popd () {
     command popd "$@" > /dev/null
 }
 
-
-# For AWS EC2 override with
-# export TF_VAR_ssh_key_basepath="/home/ec2-user/.ssh"
-
-#read -p "Enter the region: " region
-#export AWS_DEFAULT_REGION=$region
-
 pushd ${SCRIPTDIR}
 
 # Initialize Terraform
@@ -32,6 +25,24 @@ apply_output=$(terraform apply -auto-approve 2>&1 | tee /dev/tty)
 if [[ ${PIPESTATUS[0]} -eq 0 && $apply_output == *"Apply complete"* ]]; then
   # wait for ssh access allowed
   sleep 10
+  echo "SUCCESS: Terraform apply of all modules completed successfully"
+  gitops_workload_url="$(terraform output -raw gitops_workload_url)"
+  git clone ${gitops_workload_url} ${ROOTDIR}/codecommit || true
+  mkdir -p ${ROOTDIR}/codecommit/addons
+  mkdir -p ${ROOTDIR}/codecommit/platform/control-plane
+  touch ${ROOTDIR}/codecommit/platform/control-plane/.keep
+  mkdir -p ${ROOTDIR}/codecommit/platform/staging
+  touch ${ROOTDIR}/codecommit/platform/staging/.keep
+  mkdir -p ${ROOTDIR}/codecommit/platform/prod
+  touch ${ROOTDIR}/codecommit/platform/prod/.keep
+  mkdir -p ${ROOTDIR}/codecommit/apps
+  touch ${ROOTDIR}/codecommit/apps/.keep
+  cp -r ${ROOTDIR}/gitops/addons ${ROOTDIR}/codecommit/
+  pushd ${ROOTDIR}/codecommit
+  git add .
+  git commit -m "initial commit" || true
+  git push
+  popd
   echo "SUCCESS: Terraform apply of all modules completed successfully"
   popd
 else
