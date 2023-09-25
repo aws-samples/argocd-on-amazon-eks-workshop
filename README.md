@@ -8,34 +8,44 @@ This workshop covers the following use cases
 1. Makes changes to the app in production using gitops
 1. TODO: Have the carts backend use dynamodb deployed with ACK
 
-## Deploy Clusters
-Deploy the Hub Cluster
+## Setup Workshop
+
+Run the following command create git repository in CodeCommit and create 3 EKS Clusters (Hub, Staging, Prod)
 ```shell
-cd terraform/hub
-terraform init
-terraform apply
-```
-Access Terraform output for Hub Cluster
-```shell
-terraform output
+./install.sh
 ```
 
-Open a new Terminal and Deploy Staging Cluster
-```shell
-cd terraform/spokes
-./deploy.sh staging
-```
-Open a new Terminal and Deploy Production Cluster
-```shell
-cd terraform/spokes
-./deploy.sh prod
-```
-Each environment uses a Terraform workspace
+## Deploy EKS Cluster Addons
 
-Access Terraform output for each environment, env is "staging" or "prod" from the `spokes` directory
 ```shell
-terraform workspace select ${env}
-terraform output
+mkdir -p codecommit/addons
+cp -r gitops/addons/* codecommit/addons/
+cd codecommit
+git add .
+git push
+cd ..
+```
+
+## Deploy Platform Guardrails
+
+```shell
+mkdir -p codecommit/platform
+cp -r gitops/platform/* codecommit/platform/
+cd codecommit
+git add .
+git push
+cd .
+```
+
+## Deploy Workloads
+
+```shell
+mkdir -p codecommit/apps
+cp -r gitops/apps/* codecommit/apps/
+cd codecommit
+git add .
+git push
+cd .
 ```
 
 
@@ -55,67 +65,31 @@ echo "ArgoCD Username: admin"
 echo "ArgoCD Password: $(kubectl get secrets argocd-initial-admin-secret -n argocd --template="{{index .data.password | base64decode}}")"
 ```
 
-## Setup Staging Cluster
+## Setup Staging Cluster Terminal
 Setup `kubectl` for Staging Cluster
 ```shell
 export KUBECONFIG="/tmp/spoke-staging"
-export ARGOCD_OPTS="--port-forward --port-forward-namespace argocd --grpc-web"
 aws eks --region us-west-2 update-kubeconfig --name spoke-staging
 ```
 
-## Setup Prod Cluster
+## Setup Prod Cluster Terminal
 Setup `kubectl` for Production Cluster
 ```shell
 export KUBECONFIG="/tmp/spoke-prod"
-export ARGOCD_OPTS="--port-forward --port-forward-namespace argocd --grpc-web"
 aws eks --region us-west-2 update-kubeconfig --name spoke-prod
 ```
 
-## Deploy Cluster Addons (On the Hub Cluster run the following command)
-```shell
-kubectl apply -f bootstrap/addons.yaml
-```
-
-## Deploy Platform (On the Hub Cluster run the following command)
-```shell
-kubectl apply -f bootstrap/platform.yaml
-```
-
-## Deploy Workloads (On the Hub Cluster run the following command)
-```shell
-kubectl apply -f bootstrap/workloads.yaml
-```
-
-
-## Access UI on Staging or Production, pick the correct terminal
+## Access Applicaiton UI on Staging or Production, pick the correct terminal
 ```shell
 kubectl port-forward -n ui svc/ui 8080:80
 ```
 Open browser on http://localhost:8080
 
 
-
-## (Optional) Make changes to git using CodeCommit
-
-Create git repository
-```shell
-cd terraform/codecommit
-terraform init
-terraform apply
-```
-
-Setup git repository, from the `terraform/codecommit` directory
-```shell
-git clone $(terraform output -raw gitops_workload_url) codecommit-repo
-cd codecommit-repo
-cp -r ../../../gitops .
-git add .
-git commit -m "initial commit"
-git push
-```
+# Update Workload in Production
 
 Make a change in production, like setting the `ui` replicas to 2.
-Update the `gitops/apps/ui/prod/kustomization.yaml`
+Update the `codecommit/apps/ui/prod/kustomization.yaml`
 Uncomment the lines and save the file
 ```yaml
 patches:
@@ -129,39 +103,10 @@ git push
 ```
 
 
-Add git ssh key into argocd, from the `terraform/hub` directory
-```shell
-argocd repo add $TF_VAR_gitops_workload_org/$TF_VAR_gitops_workload_repo --ssh-private-key-path ${HOME}/.ssh/gitops_ssh.pem --insecure-ignore-host-key --upsert --name git-repo
-```
-
-Update ArgoCD git urls in all Clusters, from the `terraform/hub` directory
-```shell
-kubectl annotate secret -n argocd --overwrite=true -l argocd.argoproj.io/secret-type=cluster \
-  platform_repo_url="$(terraform -chdir=../codecommit output -raw gitops_workload_org)/$(terraform -chdir=../codecommit output -raw gitops_workload_repo)" \
-  workload_repo_url="$(terraform -chdir=../codecommit output -raw gitops_workload_org)/$(terraform -chdir=../codecommit output -raw gitops_workload_repo)"
-```
-
-
-
 ## Clean
-
-Destroy Spoke Clusters
+Destroy all AWS resources
 ```shell
-cd terraform/spokes
-./destroy.sh staging
-./destroy.sh prod
-```
-
-Destroy Hub Clusters
-```shell
-cd terraform/hub
-./destroy.sh
-```
-
-Destroy codecommit
-```shell
-cd terraform/codecommit
-terraform destroy
+./cleaup.sh
 ```
 
 ## Security

@@ -67,6 +67,7 @@ locals {
   region                 = "us-west-2"
   cluster_version        = var.kubernetes_version
   vpc_cidr               = var.vpc_cidr
+
   gitops_addons_org      = data.terraform_remote_state.cluster_hub.outputs.gitops_addons_org
   gitops_addons_url      = "${local.gitops_addons_org}/${data.terraform_remote_state.cluster_hub.outputs.gitops_addons_repo}"
   gitops_addons_basepath = data.terraform_remote_state.cluster_hub.outputs.gitops_addons_basepath

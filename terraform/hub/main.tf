@@ -1,8 +1,16 @@
 provider "aws" {
-  region = local.region
 }
 data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {}
+data "aws_region" "current" {}
+
+data "terraform_remote_state" "git" {
+  backend = "local"
+
+  config = {
+    path = "${path.module}/../codecommit/terraform.tfstate"
+  }
+}
 
 provider "helm" {
   kubernetes {
@@ -13,21 +21,9 @@ provider "helm" {
       api_version = "client.authentication.k8s.io/v1beta1"
       command     = "aws"
       # This requires the awscli to be installed locally where Terraform is executed
-      args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--region", local.region]
+      args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--region", data.aws_region.current.id]
     }
   }
-}
-
-provider "kubectl" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--region", local.region]
-    command     = "aws"
-  }
-  load_config_file  = false
-  apply_retry_count = 15
 }
 
 provider "kubernetes" {
@@ -38,34 +34,33 @@ provider "kubernetes" {
     api_version = "client.authentication.k8s.io/v1beta1"
     command     = "aws"
     # This requires the awscli to be installed locally where Terraform is executed
-    args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--region", local.region]
+    args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--region", data.aws_region.current.id]
   }
 }
 
 locals {
   name                   = "hub-cluster"
   environment            = "control-plane"
-  region                 = "us-west-2"
   cluster_version        = var.kubernetes_version
   vpc_cidr               = var.vpc_cidr
 
-  gitops_addons_org      = var.gitops_addons_org
-  gitops_addons_url      = "${var.gitops_addons_org}/${var.gitops_addons_repo}"
-  gitops_addons_basepath = var.gitops_addons_basepath
-  gitops_addons_path     = var.gitops_addons_path
-  gitops_addons_revision = var.gitops_addons_revision
+  gitops_addons_org      = data.terraform_remote_state.git.outputs.gitops_addons_org
+  gitops_addons_url      = data.terraform_remote_state.git.outputs.gitops_addons_url
+  gitops_addons_basepath = data.terraform_remote_state.git.outputs.gitops_addons_basepath
+  gitops_addons_path     = data.terraform_remote_state.git.outputs.gitops_addons_path
+  gitops_addons_revision = data.terraform_remote_state.git.outputs.gitops_addons_revision
 
-  gitops_platform_org      = var.gitops_platform_org
-  gitops_platform_repo     = var.gitops_platform_repo
-  gitops_platform_path     = var.gitops_platform_path
-  gitops_platform_revision = var.gitops_platform_revision
-  gitops_platform_url      = "${local.gitops_platform_org}/${local.gitops_platform_repo}"
+  gitops_platform_org      = data.terraform_remote_state.git.outputs.gitops_platform_org
+  gitops_platform_url      = data.terraform_remote_state.git.outputs.gitops_platform_url
+  gitops_platform_path     = data.terraform_remote_state.git.outputs.gitops_platform_path
+  gitops_platform_revision = data.terraform_remote_state.git.outputs.gitops_platform_revision
 
-  gitops_workload_org      = var.gitops_workload_org
-  gitops_workload_repo     = var.gitops_workload_repo
-  gitops_workload_path     = var.gitops_workload_path
-  gitops_workload_revision = var.gitops_workload_revision
-  gitops_workload_url      = "${local.gitops_workload_org}/${local.gitops_workload_repo}"
+  gitops_workload_org      = data.terraform_remote_state.git.outputs.gitops_workload_org
+  gitops_workload_url      = data.terraform_remote_state.git.outputs.gitops_workload_url
+  gitops_workload_path     = data.terraform_remote_state.git.outputs.gitops_workload_path
+  gitops_workload_revision = data.terraform_remote_state.git.outputs.gitops_workload_revision
+
+  git_private_ssh_key = data.terraform_remote_state.git.outputs.git_private_ssh_key
 
   argocd_namespace = "argocd"
 
@@ -112,7 +107,7 @@ locals {
     module.eks_blueprints_addons.gitops_metadata,
     {
       aws_cluster_name = module.eks.cluster_name
-      aws_region       = local.region
+      aws_region       = data.aws_region.current.id
       aws_account_id   = data.aws_caller_identity.current.account_id
       aws_vpc_id       = module.vpc.vpc_id
     },
@@ -133,7 +128,7 @@ locals {
     }
   )
 
-  argocd_bootstrap_app_of_apps = {
+  argocd_apps = {
     #addons = file("${path.module}/bootstrap/addons.yaml")
     #platform = file("${path.module}/bootstrap/platform.yaml")
     #workloads = file("${path.module}/bootstrap/workloads.yaml")
@@ -148,34 +143,65 @@ locals {
 }
 
 ################################################################################
-# GitOps Bridge: Metadata
+# GitOps Bridge: Private ssh keys for git
 ################################################################################
-module "gitops_bridge_metadata" {
-  source = "github.com/gitops-bridge-dev/gitops-bridge-argocd-metadata-terraform?ref=v1.0.0"
+resource "kubernetes_namespace" "argocd" {
+  depends_on = [module.eks_blueprints_addons]
+  metadata {
+    name = local.argocd_namespace
+  }
+}
+resource "kubernetes_secret" "git_secrets" {
+  depends_on = [kubernetes_namespace.argocd]
+  for_each = {
+    git-addons = {
+      type          = "git"
+      url           = local.gitops_addons_url
+      sshPrivateKey = file(pathexpand(local.git_private_ssh_key))
+      insecureIgnoreHostKey = "true"
+    }
+    git-platform = {
+      type          = "git"
+      url           = local.gitops_platform_url
+      sshPrivateKey = file(pathexpand(local.git_private_ssh_key))
+      insecureIgnoreHostKey = "true"
+    }
+    git-workloads = {
+      type          = "git"
+      url           = local.gitops_workload_url
+      sshPrivateKey = file(pathexpand(local.git_private_ssh_key))
+      insecureIgnoreHostKey = "true"
+    }
 
-  cluster_name = module.eks.cluster_name
-  environment  = local.environment
-  metadata     = local.addons_metadata
-  addons       = local.addons
+  }
+  metadata {
+    name      = each.key
+    namespace = kubernetes_namespace.argocd.metadata[0].name
+    labels = {
+      "argocd.argoproj.io/secret-type" = "repository"
+    }
+  }
+  data = each.value
 }
 
 ################################################################################
 # GitOps Bridge: Bootstrap
 ################################################################################
 module "gitops_bridge_bootstrap" {
-  source = "github.com/gitops-bridge-dev/gitops-bridge-argocd-bootstrap-terraform?ref=v1.0.0"
+  source = "github.com/gitops-bridge-dev/gitops-bridge-argocd-bootstrap-terraform?ref=v2.0.0"
 
-  argocd_cluster               = module.gitops_bridge_metadata.argocd
-  argocd_bootstrap_app_of_apps = local.argocd_bootstrap_app_of_apps
-  argocd = {
-    namespace = local.argocd_namespace
-    values = [<<EOF
-      server:
-        service:
-          type: LoadBalancer
-      EOF
-    ]
+  cluster = {
+    cluster_name = module.eks.cluster_name
+    environment  = local.environment
+    metadata     = local.addons_metadata
+    addons       = local.addons
   }
+  apps       = local.argocd_apps
+  argocd     = {
+    namespace = local.argocd_namespace
+    create_namespace = false
+  }
+  depends_on = [kubernetes_secret.git_secrets]
 }
 
 ################################################################################

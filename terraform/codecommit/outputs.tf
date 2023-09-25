@@ -11,6 +11,9 @@ output "ssh_host" {
   value = local.ssh_host
 }
 
+output "git_private_ssh_key" {
+  value = local.git_private_ssh_key
+}
 
 output "gitops_addons_url" {
   value = "${local.gitops_workload_org}/${local.gitops_workload_repo}"

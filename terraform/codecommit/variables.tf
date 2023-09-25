@@ -8,7 +8,7 @@ variable "ssh_key_basepath" {
 
 variable "gitops_addons_basepath" {
   description = "Git repository base path for addons"
-  default     = "gitops/addons/"
+  default     = "addons/"
 }
 variable "gitops_addons_path" {
   description = "Git repository path for addons"
@@ -21,7 +21,7 @@ variable "gitops_addons_revision" {
 
 variable "gitops_platform_path" {
   description = "Git repository path for workload"
-  default     = "gitops/platform"
+  default     = "platform"
 }
 variable "gitops_platform_revision" {
   description = "Git repository revision/branch/ref for workload"
@@ -30,7 +30,7 @@ variable "gitops_platform_revision" {
 
 variable "gitops_workload_path" {
   description = "Git repository path for workload"
-  default     = "gitops/apps"
+  default     = "apps"
 }
 variable "gitops_workload_revision" {
   description = "Git repository revision/branch/ref for workload"
