@@ -1,6 +1,4 @@
-provider "aws" {
-  region = local.region
-}
+data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {}
 
@@ -10,6 +8,14 @@ data "terraform_remote_state" "cluster_hub" {
 
   config = {
     path = "${path.module}/../hub/terraform.tfstate"
+  }
+}
+
+data "terraform_remote_state" "git" {
+  backend = "local"
+
+  config = {
+    path = "${path.module}/../codecommit/terraform.tfstate"
   }
 }
 
@@ -30,18 +36,6 @@ provider "kubernetes" {
   alias = "hub"
 }
 
-provider "kubectl" {
-  host                   = data.terraform_remote_state.cluster_hub.outputs.cluster_endpoint
-  cluster_ca_certificate = base64decode(data.terraform_remote_state.cluster_hub.outputs.cluster_certificate_authority_data)
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    args        = ["eks", "get-token", "--cluster-name", data.terraform_remote_state.cluster_hub.outputs.cluster_name, "--region", data.terraform_remote_state.cluster_hub.outputs.cluster_region]
-    command     = "aws"
-  }
-  load_config_file  = false
-  apply_retry_count = 15
-  alias             = "hub"
-}
 
 ################################################################################
 # Kubernetes Access for Spoke Cluster
@@ -64,25 +58,25 @@ provider "kubernetes" {
 locals {
   name                   = "spoke-${terraform.workspace}"
   environment            = terraform.workspace
-  region                 = "us-west-2"
+  region                 = data.aws_region.current.id
   cluster_version        = var.kubernetes_version
   vpc_cidr               = var.vpc_cidr
 
-  gitops_addons_org      = data.terraform_remote_state.cluster_hub.outputs.gitops_addons_org
-  gitops_addons_url      = "${local.gitops_addons_org}/${data.terraform_remote_state.cluster_hub.outputs.gitops_addons_repo}"
-  gitops_addons_basepath = data.terraform_remote_state.cluster_hub.outputs.gitops_addons_basepath
-  gitops_addons_path     = data.terraform_remote_state.cluster_hub.outputs.gitops_addons_path
-  gitops_addons_revision = data.terraform_remote_state.cluster_hub.outputs.gitops_addons_revision
+  gitops_addons_org      = data.terraform_remote_state.git.outputs.gitops_addons_org
+  gitops_addons_url      = data.terraform_remote_state.git.outputs.gitops_addons_url
+  gitops_addons_basepath = data.terraform_remote_state.git.outputs.gitops_addons_basepath
+  gitops_addons_path     = data.terraform_remote_state.git.outputs.gitops_addons_path
+  gitops_addons_revision = data.terraform_remote_state.git.outputs.gitops_addons_revision
 
-  gitops_platform_org      = data.terraform_remote_state.cluster_hub.outputs.gitops_platform_org
-  gitops_platform_url      = "${local.gitops_platform_org}/${data.terraform_remote_state.cluster_hub.outputs.gitops_platform_repo}"
-  gitops_platform_path     = data.terraform_remote_state.cluster_hub.outputs.gitops_platform_path
-  gitops_platform_revision = data.terraform_remote_state.cluster_hub.outputs.gitops_platform_revision
+  gitops_platform_org      = data.terraform_remote_state.git.outputs.gitops_platform_org
+  gitops_platform_url      = data.terraform_remote_state.git.outputs.gitops_platform_url
+  gitops_platform_path     = data.terraform_remote_state.git.outputs.gitops_platform_path
+  gitops_platform_revision = data.terraform_remote_state.git.outputs.gitops_platform_revision
 
-  gitops_workload_org      = data.terraform_remote_state.cluster_hub.outputs.gitops_workload_org
-  gitops_workload_url      = "${local.gitops_workload_org}/${data.terraform_remote_state.cluster_hub.outputs.gitops_workload_repo}"
-  gitops_workload_path     = data.terraform_remote_state.cluster_hub.outputs.gitops_workload_path
-  gitops_workload_revision = data.terraform_remote_state.cluster_hub.outputs.gitops_workload_revision
+  gitops_workload_org      = data.terraform_remote_state.git.outputs.gitops_workload_org
+  gitops_workload_url      = data.terraform_remote_state.git.outputs.gitops_workload_url
+  gitops_workload_path     = data.terraform_remote_state.git.outputs.gitops_workload_path
+  gitops_workload_revision = data.terraform_remote_state.git.outputs.gitops_workload_revision
 
   aws_addons = {
     #enable_cert_manager = true
@@ -137,24 +131,17 @@ locals {
       addons_repo_revision = local.gitops_addons_revision
     },
     {
-      workload_repo_url      = local.gitops_workload_url
-      workload_repo_path     = local.gitops_workload_path
-      workload_repo_revision = local.gitops_workload_revision
-    },
-    {
       platform_repo_url      = local.gitops_platform_url
       platform_repo_path     = local.gitops_platform_path
       platform_repo_revision = local.gitops_platform_revision
+    },
+    {
+      workload_repo_url      = local.gitops_workload_url
+      workload_repo_path     = local.gitops_workload_path
+      workload_repo_revision = local.gitops_workload_revision
     }
   )
 
-  argocd_bootstrap_app_of_apps = {
-    workloads = templatefile("${path.module}/bootstrap/workloads.yaml",
-      {
-        environment = local.environment
-        cluster     = module.eks.cluster_name
-    })
-  }
 
   azs = slice(data.aws_availability_zones.available.names, 0, 3)
 
@@ -165,19 +152,24 @@ locals {
 }
 
 ################################################################################
-# GitOps Bridge: Metadata for Spoke Cluster
+# GitOps Bridge: Bootstrap for Hub Cluster
 ################################################################################
-module "gitops_bridge_metadata_hub" {
-  source = "github.com/gitops-bridge-dev/gitops-bridge-argocd-metadata-terraform?ref=v1.0.0"
+module "gitops_bridge_bootstrap_hub" {
+  source = "github.com/gitops-bridge-dev/gitops-bridge-argocd-bootstrap-terraform?ref=v2.0.0"
 
-  cluster_name = module.eks.cluster_name
-  environment  = local.environment
-  metadata     = local.addons_metadata
-  addons       = local.addons
+  # The ArgoCD remote cluster secret is deploy on hub cluster not on spoke clusters
+  providers = {
+    kubernetes = kubernetes.hub
+  }
 
-  argocd = {
-    server = module.eks.cluster_endpoint
-    config = <<-EOT
+  install = false # We are not installing argocd via helm on hub cluster
+  cluster = {
+    cluster_name = module.eks.cluster_name
+    environment  = local.environment
+    metadata     = local.addons_metadata
+    addons       = local.addons
+    server       = module.eks.cluster_endpoint
+    config       = <<-EOT
       {
         "tlsClientConfig": {
           "insecure": false,
@@ -190,23 +182,6 @@ module "gitops_bridge_metadata_hub" {
       }
     EOT
   }
-}
-
-################################################################################
-# GitOps Bridge: Bootstrap for Hub Cluster
-################################################################################
-module "gitops_bridge_bootstrap_hub" {
-  source = "github.com/gitops-bridge-dev/gitops-bridge-argocd-bootstrap-terraform?ref=v1.0.0"
-
-  # The ArgoCD remote cluster secret is deploy on hub cluster not on spoke clusters
-  providers = {
-    kubernetes = kubernetes.hub
-    kubectl    = kubectl.hub
-  }
-
-  argocd_create_install        = false # We are not installing argocd via helm on hub cluster
-  argocd_cluster               = module.gitops_bridge_metadata_hub.argocd
-  #argocd_bootstrap_app_of_apps = local.argocd_bootstrap_app_of_apps
 }
 
 ################################################################################

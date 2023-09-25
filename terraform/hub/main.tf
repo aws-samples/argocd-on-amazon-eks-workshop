@@ -1,5 +1,3 @@
-provider "aws" {
-}
 data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {}
 data "aws_region" "current" {}
@@ -21,7 +19,7 @@ provider "helm" {
       api_version = "client.authentication.k8s.io/v1beta1"
       command     = "aws"
       # This requires the awscli to be installed locally where Terraform is executed
-      args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--region", data.aws_region.current.id]
+      args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--region", local.region]
     }
   }
 }
@@ -34,13 +32,14 @@ provider "kubernetes" {
     api_version = "client.authentication.k8s.io/v1beta1"
     command     = "aws"
     # This requires the awscli to be installed locally where Terraform is executed
-    args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--region", data.aws_region.current.id]
+    args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--region", local.region]
   }
 }
 
 locals {
   name                   = "hub-cluster"
   environment            = "control-plane"
+  region                 = data.aws_region.current.id
   cluster_version        = var.kubernetes_version
   vpc_cidr               = var.vpc_cidr
 
@@ -107,7 +106,7 @@ locals {
     module.eks_blueprints_addons.gitops_metadata,
     {
       aws_cluster_name = module.eks.cluster_name
-      aws_region       = data.aws_region.current.id
+      aws_region       = local.region
       aws_account_id   = data.aws_caller_identity.current.account_id
       aws_vpc_id       = module.vpc.vpc_id
     },

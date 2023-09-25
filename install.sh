@@ -42,3 +42,5 @@ popd
 
 
 ${SCRIPTDIR}/terraform/hub/deploy.sh
+
+${SCRIPTDIR}/terraform/spokes/deploy.sh staging

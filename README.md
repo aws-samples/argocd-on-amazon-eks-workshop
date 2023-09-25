@@ -15,17 +15,6 @@ Run the following command create git repository in CodeCommit and create 3 EKS C
 ./install.sh
 ```
 
-## Deploy EKS Cluster Addons
-
-```shell
-mkdir -p codecommit/addons
-cp -r gitops/addons/* codecommit/addons/
-cd codecommit
-git add .
-git push
-cd ..
-```
-
 ## Deploy Platform Guardrails
 
 ```shell
@@ -33,8 +22,9 @@ mkdir -p codecommit/platform
 cp -r gitops/platform/* codecommit/platform/
 cd codecommit
 git add .
+git commit -m "add platform"
 git push
-cd .
+cd ..
 ```
 
 ## Deploy Workloads
@@ -44,8 +34,9 @@ mkdir -p codecommit/apps
 cp -r gitops/apps/* codecommit/apps/
 cd codecommit
 git add .
+git commit -m "add workloads"
 git push
-cd .
+cd ..
 ```
 
 
