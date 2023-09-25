@@ -12,6 +12,7 @@ This workshop covers the following use cases
 
 Run the following command create git repository in CodeCommit and create 3 EKS Clusters (Hub, Staging, Prod)
 ```shell
+export AWS_DEFAULT_REGION="us-west-2"
 ./install.sh
 ```
 
