@@ -10,6 +10,14 @@ locals {
   ssh_key_basepath = var.ssh_key_basepath
   git_private_ssh_key = "${local.ssh_key_basepath}/gitops_ssh.pem"
   git_private_ssh_key_config = "${local.ssh_key_basepath}/config"
+  ssh_host = "git-codecommit.*.amazonaws.com"
+  ssh_config = <<-EOF
+  # AWS Workshop https://github.com/aws-samples/argocd-on-amazon-eks-workshop.git
+  Host ${local.ssh_host}
+    User ${aws_iam_user.gitops.unique_id}
+    IdentityFile ~/.ssh/gitops_ssh.pem
+  EOF
+
 }
 
 resource "aws_codecommit_repository" "argocd" {
@@ -40,14 +48,62 @@ resource "local_file" "ssh_private_key" {
 }
 
 resource "local_file" "ssh_config" {
-  content         = <<EOF
-Host git-codecommit.*.amazonaws.com
-  User ${aws_iam_user.gitops.unique_id}
-  IdentityFile ~/.ssh/gitops_ssh.pem
-EOF
+  count = local.ssh_key_basepath == "/home/ec2-user/.ssh" ? 1 : 0
+  content         = local.ssh_config
   filename        = pathexpand(local.git_private_ssh_key_config)
   file_permission = "0600"
 }
+
+
+# resource "null_resource" "append_string" {
+#   triggers = {
+#     always_run = "${timestamp()}"
+#   }
+
+#   provisioner "local-exec" {
+#     command = <<-EOL
+#       if ! grep -q "${local.ssh_host}" "${pathexpand(local.git_private_ssh_key_config)}"; then
+#         echo "${local.ssh_config}" >> "${pathexpand(local.git_private_ssh_key_config)}"
+#       fi
+#     EOL
+#   }
+# }
+
+resource "null_resource" "append_string_block" {
+  triggers = {
+    always_run = "${timestamp()}"
+    file = pathexpand(local.git_private_ssh_key_config)
+  }
+
+  provisioner "local-exec" {
+    when = create
+    command = <<-EOL
+      start_marker="### START BLOCK AWS Workshop ###"
+      end_marker="### END BLOCK AWS Workshop ###"
+      block="$start_marker\n${local.ssh_config}\n$end_marker"
+      file="${self.triggers.file}"
+
+      if ! grep -q "$start_marker" "$file"; then
+        echo "$block" >> "$file"
+      fi
+    EOL
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = <<-EOL
+      start_marker="### START BLOCK AWS Workshop ###"
+      end_marker="### END BLOCK AWS Workshop ###"
+      file="${self.triggers.file}"
+
+      if grep -q "$start_marker" "$file"; then
+        sed -i '' "/$start_marker/,/$end_marker/d" "$file"
+      fi
+    EOL
+
+  }
+}
+
 
 data "aws_iam_policy_document" "gitops_access" {
   statement {

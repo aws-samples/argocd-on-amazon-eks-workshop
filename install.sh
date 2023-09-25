@@ -1,39 +1,33 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-read -p "Enter the region: " region
-export AWS_DEFAULT_REGION=$region
+set -euo pipefail
 
-# Initialize Terraform
-terraform init --upgrade
+SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ROOTDIR="$(cd ${SCRIPTDIR}/..; pwd )"
+[[ -n "${DEBUG:-}" ]] && set -x
 
-# List of Terraform modules to apply in sequence
-targets=(
-  "module.vpc"
-  "module.eks"
-  "module.ebs_csi_driver_irsa"
-  "module.eks_blueprints_addons"
-  "module.eks_data_addons"
-)
 
-# Apply modules in sequence
-for target in "${targets[@]}"
-do
-  echo "Applying module $target..."
-  apply_output=$(terraform apply -target="$target" -auto-approve 2>&1 | tee /dev/tty)
-  if [[ ${PIPESTATUS[0]} -eq 0 && $apply_output == *"Apply complete"* ]]; then
-    echo "SUCCESS: Terraform apply of $target completed successfully"
-  else
-    echo "FAILED: Terraform apply of $target failed"
-    exit 1
-  fi
-done
+pushd () {
+    command pushd "$@" > /dev/null
+}
 
-# Final apply to catch any remaining resources
-echo "Applying remaining resources..."
-apply_output=$(terraform apply -auto-approve 2>&1 | tee /dev/tty)
-if [[ ${PIPESTATUS[0]} -eq 0 && $apply_output == *"Apply complete"* ]]; then
-  echo "SUCCESS: Terraform apply of all modules completed successfully"
-else
-  echo "FAILED: Terraform apply of all modules failed"
-  exit 1
-fi
+popd () {
+    command popd "$@" > /dev/null
+}
+
+#read -p "Enter the region: " region
+#export AWS_DEFAULT_REGION=$region
+
+${SCRIPTDIR}/terraform/codecommit/deploy.sh
+gitops_workload_url="$(terraform -chdir=${SCRIPTDIR}/terraform/codecommit output -raw gitops_workload_url)"
+git clone ${gitops_workload_url} ${SCRIPTDIR}/codecommit
+cp -r ${SCRIPTDIR}/gitops/* ${SCRIPTDIR}/codecommit/
+pushd ${SCRIPTDIR}/codecommit
+git add .
+git commit -m "initial commit"
+git push
+popd
+
+
+
+

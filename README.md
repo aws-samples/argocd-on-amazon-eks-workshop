@@ -4,7 +4,7 @@ This workshop covers the following use cases
 
 1. Deploy hub-spoke clusters (hub, staging, prod)
 1. Deploy namespaces and argocd project
-1. Deploy watch app store application on each environment cluster
+1. Deploy application on each environment cluster (ie staging and production)
 1. Makes changes to the app in production using gitops
 1. TODO: Have the carts backend use dynamodb deployed with ACK
 
