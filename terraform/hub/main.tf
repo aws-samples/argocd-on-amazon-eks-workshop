@@ -2,14 +2,6 @@ data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {}
 data "aws_region" "current" {}
 
-data "terraform_remote_state" "git" {
-  backend = "local"
-
-  config = {
-    path = "${path.module}/../codecommit/terraform.tfstate"
-  }
-}
-
 provider "helm" {
   kubernetes {
     host                   = module.eks.cluster_endpoint
