@@ -31,3 +31,5 @@ terraform workspace new $env || true
 terraform workspace select $env
 terraform init --upgrade
 terraform apply -var-file="workspaces/${env}.tfvars"
+
+popd

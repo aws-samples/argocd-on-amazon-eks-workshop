@@ -34,3 +34,5 @@ terraform destroy -target="module.eks_blueprints_addons" -auto-approve -var-file
 terraform destroy -target="module.eks" -auto-approve -var-file="workspaces/${env}.tfvars"
 terraform destroy -target="module.vpc" -auto-approve -var-file="workspaces/${env}.tfvars"
 terraform destroy -auto-approve -var-file="workspaces/${env}.tfvars"
+
+popd
