@@ -6,7 +6,6 @@ data "aws_availability_zones" "available" {}
 ################################################################################
 # Kubernetes Access for Hub Cluster
 ################################################################################
-
 provider "kubernetes" {
   host                   = data.terraform_remote_state.cluster_hub.outputs.cluster_endpoint
   cluster_ca_certificate = base64decode(data.terraform_remote_state.cluster_hub.outputs.cluster_certificate_authority_data)
@@ -24,7 +23,6 @@ provider "kubernetes" {
 ################################################################################
 # Kubernetes Access for Spoke Cluster
 ################################################################################
-
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
