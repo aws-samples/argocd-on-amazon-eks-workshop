@@ -1,6 +1,11 @@
 ## ArgoCD on Amazon EKS Workshop
 
-This workshop covers the following use cases
+:construction: WORK IN PROGRESS :construction:
+
+[Register for AWS re:Invent 2023 Session 402](https://hub.reinvent.awsevents.com/attendee-portal/catalog/?search=con402) to attend the full version of the workshop
+
+
+## Use Cases
 
 1. Deploy hub-spoke clusters (hub, staging, prod)
 1. Deploy namespaces and argocd project
