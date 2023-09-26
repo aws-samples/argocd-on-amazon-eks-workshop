@@ -11,6 +11,6 @@ SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Deploy the infrastructure
 ${SCRIPTDIR}/terraform/codecommit/deploy.sh
-# ${SCRIPTDIR}/terraform/hub/deploy.sh
-# ${SCRIPTDIR}/terraform/spokes/deploy.sh staging
-# ${SCRIPTDIR}/terraform/spokes/deploy.sh prod
+${SCRIPTDIR}/terraform/hub/deploy.sh
+${SCRIPTDIR}/terraform/spokes/deploy.sh staging
+${SCRIPTDIR}/terraform/spokes/deploy.sh prod
