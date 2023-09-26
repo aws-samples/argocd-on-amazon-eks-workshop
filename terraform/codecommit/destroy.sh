@@ -28,8 +28,8 @@ if [[ $? -eq 0 && $destroy_output == *"Destroy complete!"* ]]; then
   echo "SUCCESS: Terraform destroy of all targets completed successfully"
 else
   echo "FAILED: Terraform destroy of all targets failed"
+  popd
   exit 1
 fi
-
 
 popd

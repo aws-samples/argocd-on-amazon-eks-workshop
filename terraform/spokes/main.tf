@@ -3,26 +3,9 @@ data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {}
 
 
-data "terraform_remote_state" "cluster_hub" {
-  backend = "local"
-
-  config = {
-    path = "${path.module}/../hub/terraform.tfstate"
-  }
-}
-
-data "terraform_remote_state" "git" {
-  backend = "local"
-
-  config = {
-    path = "${path.module}/../codecommit/terraform.tfstate"
-  }
-}
-
 ################################################################################
 # Kubernetes Access for Hub Cluster
 ################################################################################
-
 provider "kubernetes" {
   host                   = data.terraform_remote_state.cluster_hub.outputs.cluster_endpoint
   cluster_ca_certificate = base64decode(data.terraform_remote_state.cluster_hub.outputs.cluster_certificate_authority_data)
@@ -40,7 +23,6 @@ provider "kubernetes" {
 ################################################################################
 # Kubernetes Access for Spoke Cluster
 ################################################################################
-
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)

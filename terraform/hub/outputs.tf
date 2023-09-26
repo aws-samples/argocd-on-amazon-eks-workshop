@@ -53,5 +53,5 @@ output "cluster_certificate_authority_data" {
 }
 output "cluster_region" {
   description = "Cluster Hub region"
-  value       = data.aws_region.current.id
+  value       = local.region
 }
