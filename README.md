@@ -21,10 +21,16 @@ export AWS_DEFAULT_REGION="us-west-2"
 ./install.sh
 ```
 
+Access ArgoCD UI on the Hub Cluster
+```shell
+echo "ArgoCD URL: https://$(kubectl --context hub-cluster get svc -n argocd argo-cd-argocd-server -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
+echo "ArgoCD Username: admin"
+echo "ArgoCD Password: $(kubectl --context hub-cluster get secrets argocd-initial-admin-secret -n argocd --template="{{index .data.password | base64decode}}")"
+```
+
 ## Deploy Platform Guardrails
 
 ```shell
-mkdir -p codecommit/platform
 cp -r gitops/platform/* codecommit/platform/
 cd codecommit
 git add .
@@ -33,10 +39,32 @@ git push
 cd ..
 ```
 
+## Verify namespaces
+
+
+```shell
+kubectl get ns --context staging-cluster
+kubectl get ns --context prod-cluster
+```
+There should be new namespaces on each cluster
+```shell
+NAME              STATUS   AGE
+assets            Active   7m8s
+carts             Active   7m8s
+catalog           Active   7m8s
+checkout          Active   7m8s
+default           Active   159m
+kube-node-lease   Active   159m
+kube-public       Active   159m
+kube-system       Active   159m
+orders            Active   7m8s
+rabbitmq          Active   7m8s
+ui                Active   7m8s
+```
+
 ## Deploy Workloads
 
 ```shell
-mkdir -p codecommit/apps
 cp -r gitops/apps/* codecommit/apps/
 cd codecommit
 git add .
@@ -45,42 +73,33 @@ git push
 cd ..
 ```
 
-
-## Setup Hub Cluster
-Setup `kubectl` and `argocd` for Hub Cluster
+Verify App is running on each cluster
 ```shell
-export KUBECONFIG="/tmp/hub-cluster"
-export ARGOCD_OPTS="--port-forward --port-forward-namespace argocd --grpc-web"
-aws eks --region us-west-2 update-kubeconfig --name hub-cluster
-kubectl config set-context --current --namespace argocd
-argocd login --port-forward --username admin --password $(argocd admin initial-password | head -1)
+kubectl --context staging-cluster get pods -A -l app.kubernetes.io/created-by=eks-workshop
+kubectl --context prod-cluster get pods -A -l app.kubernetes.io/created-by=eks-workshop
 ```
-Access ArgoCD UI
+There should be pods running in namespaces
 ```shell
-echo "ArgoCD URL: https://$(kubectl get svc -n argocd argo-cd-argocd-server -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
-echo "ArgoCD Username: admin"
-echo "ArgoCD Password: $(kubectl get secrets argocd-initial-admin-secret -n argocd --template="{{index .data.password | base64decode}}")"
-```
-
-## Setup Staging Cluster Terminal
-Setup `kubectl` for Staging Cluster
-```shell
-export KUBECONFIG="/tmp/spoke-staging"
-aws eks --region us-west-2 update-kubeconfig --name spoke-staging
+NAMESPACE   NAME                             READY   STATUS    RESTARTS        AGE
+assets      assets-7556557b4d-sfndh          1/1     Running   0               3m56s
+carts       carts-86c7db99db-5b557           1/1     Running   0               69s
+carts       carts-dynamodb-cb4b6f564-wn265   1/1     Running   0               69s
+catalog     catalog-6ccfd94978-fcrkl         1/1     Running   0               3m56s
+catalog     catalog-mysql-0                  1/1     Running   0               3m56s
+checkout    checkout-6845d66fb-b6m82         1/1     Running   0               4m
+checkout    checkout-redis-fb67f7944-j2jvr   1/1     Running   0               4m1s
+orders      orders-548b6658ff-qjsv7          1/1     Running   0               3m56s
+orders      orders-mysql-76dd47c48f-jwt7j    1/1     Running   0               3m56s
+ui          ui-59b974ffcc-cbmkw              1/1     Running   0               69s
 ```
 
-## Setup Prod Cluster Terminal
-Setup `kubectl` for Production Cluster
-```shell
-export KUBECONFIG="/tmp/spoke-prod"
-aws eks --region us-west-2 update-kubeconfig --name spoke-prod
-```
+## Access Application UI
 
-## Access Applicaiton UI on Staging or Production, pick the correct terminal
+Access in
 ```shell
-kubectl port-forward -n ui svc/ui 8080:80
+echo "Staging UI URL: http://$(kubectl --context staging-cluster get svc -n ui ui-nlb -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
+echo "Production UI URL: http://$(kubectl --context prod-cluster get svc -n ui ui-nlb -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
 ```
-Open browser on http://localhost:8080
 
 
 # Update Workload in Production
@@ -94,11 +113,25 @@ patches:
 ```
 Push the changes to git
 ```shell
+cd codecommit
+sed -i '' s/#-/-/ apps/ui/prod/kustomization.yaml
+sed -i '' s/#patchesStrategicMerge/patchesStrategicMerge/ apps/ui/prod/kustomization.yaml
 git add .
-git commit -m "Replicas for ui set to 2 in prod"
+git commit -m "set replicas to 2 in prod"
 git push
+cd ..
 ```
 
+Verify there are 2 replias in prod cluster
+```shell
+kubectl --context prod-cluster get pods -n ui
+```
+Expected output
+```shell
+NAME                  READY   STATUS    RESTARTS   AGE
+ui-59b974ffcc-fktvx   1/1     Running   0          5m
+ui-59b974ffcc-hwkqh   1/1     Running   0          41s
+```
 
 ## Clean
 Destroy all AWS resources
