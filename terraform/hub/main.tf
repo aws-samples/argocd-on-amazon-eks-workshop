@@ -64,7 +64,7 @@ locals {
     #enable_cluster_autoscaler                    = true
     #enable_external_dns                          = true
     #enable_external_secrets                      = true
-    enable_aws_load_balancer_controller = true
+    #enable_aws_load_balancer_controller = true
     #enable_fargate_fluentbit                     = true
     #enable_aws_for_fluentbit                     = true
     #enable_aws_node_termination_handler          = true

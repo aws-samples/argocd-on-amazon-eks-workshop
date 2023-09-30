@@ -14,3 +14,7 @@ ${SCRIPTDIR}/terraform/codecommit/deploy.sh
 ${SCRIPTDIR}/terraform/hub/deploy.sh
 ${SCRIPTDIR}/terraform/spokes/deploy.sh staging
 ${SCRIPTDIR}/terraform/spokes/deploy.sh prod
+
+aws eks --region $AWS_DEFAULT_REGION update-kubeconfig --name hub-cluster --alias hub-cluster
+aws eks --region $AWS_DEFAULT_REGION update-kubeconfig --name spoke-staging --alias staging-cluster
+aws eks --region $AWS_DEFAULT_REGION update-kubeconfig --name spoke-prod --alias prod-cluster
