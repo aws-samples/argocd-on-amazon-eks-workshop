@@ -76,7 +76,15 @@ output "gitops_workload_path" {
 }
 output "gitops_workload_revision" {
   description = "Git repository revision/branch/ref for workload"
-  value       = var.gitops_workload_revision
+  value         = var.gitops_workload_revision
+}
+output "codecommit_key_id" {
+  description = "Secret name that holds the SSH key for accessing CodeCommit"
+  value       = aws_secretsmanager_secret.codecommit_key.id
+}
+output "codecommit_key_name" {
+  description = "Secret name that holds the SSH key for accessing CodeCommit"
+  value       = aws_secretsmanager_secret.codecommit_key.name
 }
 output "codecommit_key_id" {
   description = "Secret name that holds the SSH key for accessing CodeCommit"
