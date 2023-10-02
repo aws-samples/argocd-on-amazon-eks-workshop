@@ -4,13 +4,13 @@ locals {
   addon_context = {
     eks_cluster_id = "gitops-bridge"
   }
-  gitops_workload_org = "ssh://${aws_iam_user_ssh_key.gitops.id}@git-codecommit.${data.aws_region.current.id}.amazonaws.com"
-  gitops_workload_repo = "v1/repos/${local.addon_context.eks_cluster_id}-argocd"
-  ssh_key_basepath = var.ssh_key_basepath
-  git_private_ssh_key = "${local.ssh_key_basepath}/gitops_ssh.pem"
+  gitops_workload_org        = "ssh://${aws_iam_user_ssh_key.gitops.id}@git-codecommit.${data.aws_region.current.id}.amazonaws.com"
+  gitops_workload_repo       = "v1/repos/${local.addon_context.eks_cluster_id}-argocd"
+  ssh_key_basepath           = var.ssh_key_basepath
+  git_private_ssh_key        = "${local.ssh_key_basepath}/gitops_ssh.pem"
   git_private_ssh_key_config = "${local.ssh_key_basepath}/config"
-  ssh_host = "git-codecommit.*.amazonaws.com"
-  ssh_config = <<-EOF
+  ssh_host                   = "git-codecommit.*.amazonaws.com"
+  ssh_config                 = <<-EOF
   # AWS Workshop https://github.com/aws-samples/argocd-on-amazon-eks-workshop.git
   Host ${local.ssh_host}
     User ${aws_iam_user.gitops.unique_id}
@@ -43,11 +43,11 @@ resource "tls_private_key" "gitops" {
 resource "local_file" "ssh_private_key" {
   content         = tls_private_key.gitops.private_key_pem
   filename        = pathexpand(local.git_private_ssh_key)
-  file_permission = "0400"
+  file_permission = "0600"
 }
 
 resource "local_file" "ssh_config" {
-  count = local.ssh_key_basepath == "/home/ec2-user/.ssh" ? 1 : 0
+  count           = local.ssh_key_basepath == "/home/ec2-user/.ssh" ? 1 : 0
   content         = local.ssh_config
   filename        = pathexpand(local.git_private_ssh_key_config)
   file_permission = "0600"
@@ -71,11 +71,11 @@ resource "local_file" "ssh_config" {
 resource "null_resource" "append_string_block" {
   triggers = {
     always_run = "${timestamp()}"
-    file = pathexpand(local.git_private_ssh_key_config)
+    file       = pathexpand(local.git_private_ssh_key_config)
   }
 
   provisioner "local-exec" {
-    when = create
+    when    = create
     command = <<-EOL
       start_marker="### START BLOCK AWS Workshop ###"
       end_marker="### END BLOCK AWS Workshop ###"
