@@ -40,6 +40,22 @@ resource "tls_private_key" "gitops" {
   rsa_bits  = 4096
 }
 
+resource "random_string" "secret_suffix" {
+  length  = 5     # Length of the random string
+  special = false # Set to true if you want to include special characters
+  upper   = true  # Set to true if you want uppercase letters in the string
+  lower   = true  # Set to true if you want lowercase letters in the string
+  number  = true  # Set to true if you want numbers in the string
+}
+resource "aws_secretsmanager_secret" "codecommit_key" {
+  name = "codecommit-key-${random_string.secret_suffix.result}"
+}
+
+resource "aws_secretsmanager_secret_version" "private_key_secret_version" {
+  secret_id     = aws_secretsmanager_secret.codecommit_key.id
+  secret_string = tls_private_key.gitops.private_key_pem
+}
+
 resource "local_file" "ssh_private_key" {
   content         = tls_private_key.gitops.private_key_pem
   filename        = pathexpand(local.git_private_ssh_key)

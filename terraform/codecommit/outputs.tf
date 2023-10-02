@@ -20,23 +20,23 @@ output "gitops_addons_url" {
 }
 output "gitops_addons_org" {
   description = "Git repository org/user contains for addons"
-  value     = local.gitops_workload_org
+  value       = local.gitops_workload_org
 }
 output "gitops_addons_repo" {
   description = "Git repository contains for addons"
-  value     = local.gitops_workload_repo
+  value       = local.gitops_workload_repo
 }
 output "gitops_addons_basepath" {
   description = "Git repository base path for addons"
-  value     = var.gitops_addons_basepath
+  value       = var.gitops_addons_basepath
 }
 output "gitops_addons_path" {
   description = "Git repository path for addons"
-  value     = var.gitops_addons_path
+  value       = var.gitops_addons_path
 }
 output "gitops_addons_revision" {
   description = "Git repository revision/branch/ref for addons"
-  value     = var.gitops_addons_revision
+  value       = var.gitops_addons_revision
 }
 
 output "gitops_platform_url" {
@@ -44,19 +44,19 @@ output "gitops_platform_url" {
 }
 output "gitops_platform_org" {
   description = "Git repository org/user contains for platform"
-  value     = local.gitops_workload_org
+  value       = local.gitops_workload_org
 }
 output "gitops_platform_repo" {
   description = "Git repository contains for platform"
-  value     = local.gitops_workload_repo
+  value       = local.gitops_workload_repo
 }
 output "gitops_platform_path" {
   description = "Git repository path for platform"
-  value     = var.gitops_platform_path
+  value       = var.gitops_platform_path
 }
 output "gitops_platform_revision" {
   description = "Git repository revision/branch/ref for platform"
-  value     = var.gitops_platform_revision
+  value       = var.gitops_platform_revision
 }
 
 output "gitops_workload_url" {
@@ -64,17 +64,25 @@ output "gitops_workload_url" {
 }
 output "gitops_workload_org" {
   description = "Git repository org/user contains for workload"
-  value     = local.gitops_workload_org
+  value       = local.gitops_workload_org
 }
 output "gitops_workload_repo" {
   description = "Git repository contains for workload"
-  value     = local.gitops_workload_repo
+  value       = local.gitops_workload_repo
 }
 output "gitops_workload_path" {
   description = "Git repository path for workload"
-  value     = var.gitops_workload_path
+  value       = var.gitops_workload_path
 }
 output "gitops_workload_revision" {
   description = "Git repository revision/branch/ref for workload"
-  value     = var.gitops_workload_revision
+  value       = var.gitops_workload_revision
+}
+output "codecommit_key_id" {
+  description = "Secret name that holds the SSH key for accessing CodeCommit"
+  value       = aws_secretsmanager_secret.codecommit_key.id
+}
+output "codecommit_key_name" {
+  description = "Secret name that holds the SSH key for accessing CodeCommit"
+  value       = aws_secretsmanager_secret.codecommit_key.name
 }
