@@ -4,6 +4,5 @@ resources:
 - configMap.yaml
 - serviceAccount.yaml
 - service.yaml
-- service-db.yaml
 - deployment.yaml
-- deployment-db.yaml
+- infra-mng/ddb-table.yaml
