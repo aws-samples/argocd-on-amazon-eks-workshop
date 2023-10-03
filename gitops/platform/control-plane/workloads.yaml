@@ -24,8 +24,8 @@ spec:
               selector:
                 matchExpressions:
                   - key: environment
-                    operator: NotIn
-                    values: [control-plane]
+                    operator: In
+                    values: [staging,prod]
   template:
     metadata:
       name: 'workloads-{{metadata.labels.environment}}-{{app}}'
