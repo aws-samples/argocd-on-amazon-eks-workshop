@@ -85,6 +85,7 @@ resource "local_file" "ssh_config" {
 # }
 
 resource "null_resource" "append_string_block" {
+  count = local.ssh_key_basepath == "/home/ec2-user/.ssh" ? 0 : 1
   triggers = {
     always_run = "${timestamp()}"
     file       = pathexpand(local.git_private_ssh_key_config)
