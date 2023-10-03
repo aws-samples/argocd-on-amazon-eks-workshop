@@ -33,11 +33,15 @@ echo "ArgoCD Password: $(kubectl --context hub-cluster get secrets argocd-initia
 
 ## Deploy EKS Addons
 
-To deploy EKS Addons we need to use Infrastructure as Code (IaC) and GitOps
-
+To deploy EKS Addons we need to use Infrastructure as Code (IaC) and GitOps to work together.
+Enable the variables for the corresponding Addons in the IaC tool.
 ```shell
 sed -i '' s/"enable_aws_load_balancer_controller          = false"/"enable_aws_load_balancer_controller          = true"/ terraform/spokes/variables.tf
 sed -i '' s/"enable_ack_dynamodb                          = false"/"enable_ack_dynamodb                          = true"/ terraform/spokes/variables.tf
+```
+
+Apply the IaC to create the IAM Roles for each Addon, and enable the Helm Chart to be deploy by GitOps
+```shell
 terraform -chdir=terraform/spokes workspace select staging
 terraform -chdir=terraform/spokes apply -var-file="workspaces/staging.tfvars" -auto-approve
 terraform -chdir=terraform/spokes workspace select prod
