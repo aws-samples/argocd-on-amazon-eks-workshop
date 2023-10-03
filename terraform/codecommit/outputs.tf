@@ -86,11 +86,3 @@ output "codecommit_key_name" {
   description = "Secret name that holds the SSH key for accessing CodeCommit"
   value       = aws_secretsmanager_secret.codecommit_key.name
 }
-output "codecommit_key_id" {
-  description = "Secret name that holds the SSH key for accessing CodeCommit"
-  value       = aws_secretsmanager_secret.codecommit_key.id
-}
-output "codecommit_key_name" {
-  description = "Secret name that holds the SSH key for accessing CodeCommit"
-  value       = aws_secretsmanager_secret.codecommit_key.name
-}
