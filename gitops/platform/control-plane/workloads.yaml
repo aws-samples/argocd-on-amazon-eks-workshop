@@ -25,7 +25,7 @@ spec:
                 matchExpressions:
                   - key: environment
                     operator: In
-                    values: [staging,prod]
+                    values: [staging]
   template:
     metadata:
       name: 'workloads-{{metadata.labels.environment}}-{{app}}'
