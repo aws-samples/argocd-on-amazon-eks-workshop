@@ -153,17 +153,12 @@ echo "Production UI URL: http://$(kubectl --context prod-cluster get svc -n ui u
 ## Update Workload in Production
 
 Make a change in production, like setting the `ui` replicas to 2.
-Update the `codecommit/apps/ui/prod/kustomization.yaml`
-Uncomment the lines and save the file
-```yaml
-patches:
-- deployment.yaml
-```
+Update the patch `codecommit/apps/ui/prod/deployment.yaml`
+
 Push the changes to git
 ```shell
 cd codecommit
-sed -i '' s/#-/-/ apps/ui/prod/kustomization.yaml
-sed -i '' s/#patchesStrategicMerge/patchesStrategicMerge/ apps/ui/prod/kustomization.yaml
+sed -i '' s/"replicas: 1"/"replicas: 2"/ apps/ui/prod/deployment.yaml
 git add .
 git commit -m "set replicas to 2 in prod"
 git push
