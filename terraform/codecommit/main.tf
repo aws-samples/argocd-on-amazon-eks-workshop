@@ -14,7 +14,7 @@ locals {
   # AWS Workshop https://github.com/aws-samples/argocd-on-amazon-eks-workshop.git
   Host ${local.ssh_host}
     User ${aws_iam_user.gitops.unique_id}
-    IdentityFile ~/.ssh/gitops_ssh.pem
+    IdentityFile ${local.git_private_ssh_key}
   EOF
 
 }
