@@ -67,6 +67,8 @@ ui                Active   7m8s
 ```shell
 cp -r gitops/apps/* codecommit/apps/
 cd codecommit
+sed -i "s/ACCOUNT_ID/$ACCOUNT_ID/" apps/carts/staging/kustomization.yaml
+sed -i "s/ACCOUNT_ID/$ACCOUNT_ID/" apps/carts/prod/kustomization.yaml
 git add .
 git commit -m "add workloads"
 git push
