@@ -20,7 +20,7 @@ variable "addons" {
     enable_cluster_autoscaler                    = false
     enable_external_dns                          = false
     enable_external_secrets                      = false
-    enable_aws_load_balancer_controller          = true
+    enable_aws_load_balancer_controller          = false
     enable_fargate_fluentbit                     = false
     enable_aws_for_fluentbit                     = false
     enable_aws_node_termination_handler          = false
@@ -30,7 +30,7 @@ variable "addons" {
     enable_aws_ebs_csi_resources                 = false
     enable_aws_secrets_store_csi_driver_provider = false
     enable_ack_apigatewayv2                      = false
-    enable_ack_dynamodb                          = true
+    enable_ack_dynamodb                          = false
     enable_ack_s3                                = false
     enable_ack_rds                               = false
     enable_ack_prometheusservice                 = false
@@ -47,7 +47,7 @@ variable "addons" {
     enable_ingress_nginx                         = false
     enable_kyverno                               = false
     enable_kube_prometheus_stack                 = false
-    enable_metrics_server                        = true
+    enable_metrics_server                        = false
     enable_prometheus_adapter                    = false
     enable_secrets_store_csi_driver              = false
     enable_vpa                                   = false
