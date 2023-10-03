@@ -66,3 +66,5 @@ spec:
     kind: RoleBinding
   - group: 'rbac.authorization.k8s.io'
     kind: Role
+  - group: 'dynamodb.services.k8s.aws'
+    kind: Table

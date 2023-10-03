@@ -7,16 +7,18 @@
 
 ## Use Cases
 
-1. Deploy hub-spoke clusters (hub, staging, prod)
-1. Deploy namespaces and argocd project
-1. Deploy application on each environment cluster (ie staging and production)
-1. Makes changes to the app in production using gitops
-1. TODO: Have the carts backend use dynamodb deployed with ACK
+1. Deploy EKS clusters (hub, staging, prod)
+1. Deploy Namespaces
+1. Create DynamoDB
+1. Deploy Applications
+1. Day 2 Operations
 
-## Setup Workshop
+
+# Module 1: Setup
 
 Run the following command create git repository in CodeCommit and create 3 EKS Clusters (Hub, Staging, Prod)
 ```shell
+export ACCOUNT_ID="1234556789"
 export AWS_DEFAULT_REGION="us-west-2"
 ./install.sh
 ```
@@ -28,7 +30,51 @@ echo "ArgoCD Username: admin"
 echo "ArgoCD Password: $(kubectl --context hub-cluster get secrets argocd-initial-admin-secret -n argocd --template="{{index .data.password | base64decode}}")"
 ```
 
-## Deploy Platform Guardrails
+# Module 2: Platform
+
+## Deploy EKS Addons
+
+To deploy EKS Addons we need to use Infrastructure as Code (IaC) and GitOps to work together.
+Enable the variables for the corresponding Addons in the IaC tool.
+```shell
+sed -i '' s/"balancer_controller = false"/"balancer_controller = true"/ terraform/spokes/variables.tf
+sed -i '' s/"dynamodb                 = false"/"dynamodb                 = true"/ terraform/spokes/variables.tf
+```
+
+Apply the IaC to create the IAM Roles for each Addon, and enable the Helm Chart to be deploy by GitOps
+```shell
+terraform -chdir=terraform/spokes workspace select staging
+terraform -chdir=terraform/spokes apply -var-file="workspaces/staging.tfvars" -auto-approve
+terraform -chdir=terraform/spokes workspace select prod
+terraform -chdir=terraform/spokes apply -var-file="workspaces/prod.tfvars" -auto-approve
+```
+
+Verify AWS Load Balancer Controller is installed on each cluster
+```shell
+kubectl --context staging-cluster get pods -n kube-system -l app.kubernetes.io/name=aws-load-balancer-controller
+kubectl --context prod-cluster get pods -n kube-system -l app.kubernetes.io/name=aws-load-balancer-controller
+```
+Expected Result
+```
+NAME                                            READY   STATUS    RESTARTS   AGE
+aws-load-balancer-controller-6d64b58dfc-89wxc   1/1     Running   0          3m
+aws-load-balancer-controller-6d64b58dfc-pzbtl   1/1     Running   0          3m
+```
+
+Verify AWS Controller for Kubernetes (ACK) is installed on each cluster
+```shell
+kubectl --context staging-cluster get pods -n ack-dynamodb
+kubectl --context prod-cluster get pods -n ack-dynamodb
+```
+Expected Result
+```
+NAME                                               READY   STATUS    RESTARTS   AGE
+ack-dynamodb-aws-controllers-k8s-89685f8c5-p9rwt   1/1     Running   0          3m
+```
+
+## Deploy Namespaces
+
+Create namespaces for each microservice
 
 ```shell
 cp -r gitops/platform/* codecommit/platform/
@@ -39,12 +85,13 @@ git push
 cd ..
 ```
 
+
 ## Verify namespaces
 
 
 ```shell
-kubectl get ns --context staging-cluster
-kubectl get ns --context prod-cluster
+kubectl --context staging-cluster get ns
+kubectl --context prod-cluster get ns
 ```
 There should be new namespaces on each cluster
 ```shell
@@ -62,13 +109,15 @@ rabbitmq          Active   7m8s
 ui                Active   7m8s
 ```
 
-## Deploy Workloads
+# Module 3: Workloads
+
+Deploy the workloads to staging and production clusters
 
 ```shell
 cp -r gitops/apps/* codecommit/apps/
 cd codecommit
-sed -i "s/ACCOUNT_ID/$ACCOUNT_ID/" apps/carts/staging/kustomization.yaml
-sed -i "s/ACCOUNT_ID/$ACCOUNT_ID/" apps/carts/prod/kustomization.yaml
+sed -i '' "s/ACCOUNT_ID/$ACCOUNT_ID/" apps/carts/staging/kustomization.yaml
+sed -i '' "s/ACCOUNT_ID/$ACCOUNT_ID/" apps/carts/prod/kustomization.yaml
 git add .
 git commit -m "add workloads"
 git push
@@ -104,20 +153,17 @@ echo "Production UI URL: http://$(kubectl --context prod-cluster get svc -n ui u
 ```
 
 
-# Update Workload in Production
+# Module 4: Day 2 Operations
+
+## Update Workload in Production
 
 Make a change in production, like setting the `ui` replicas to 2.
-Update the `codecommit/apps/ui/prod/kustomization.yaml`
-Uncomment the lines and save the file
-```yaml
-patches:
-- deployment.yaml
-```
+Update the patch `codecommit/apps/ui/prod/deployment.yaml`
+
 Push the changes to git
 ```shell
 cd codecommit
-sed -i '' s/#-/-/ apps/ui/prod/kustomization.yaml
-sed -i '' s/#patchesStrategicMerge/patchesStrategicMerge/ apps/ui/prod/kustomization.yaml
+sed -i '' s/"replicas: 1"/"replicas: 2"/ apps/ui/prod/deployment.yaml
 git add .
 git commit -m "set replicas to 2 in prod"
 git push

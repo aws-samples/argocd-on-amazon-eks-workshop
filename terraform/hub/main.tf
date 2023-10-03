@@ -29,27 +29,22 @@ provider "kubernetes" {
 }
 
 locals {
-  name                   = "hub-cluster"
-  environment            = "control-plane"
-  region                 = data.aws_region.current.id
-  cluster_version        = var.kubernetes_version
-  vpc_cidr               = var.vpc_cidr
+  name            = "hub-cluster"
+  environment     = "control-plane"
+  region          = data.aws_region.current.id
+  cluster_version = var.kubernetes_version
+  vpc_cidr        = var.vpc_cidr
 
-  gitops_addons_org      = data.terraform_remote_state.git.outputs.gitops_addons_org
   gitops_addons_url      = data.terraform_remote_state.git.outputs.gitops_addons_url
   gitops_addons_basepath = data.terraform_remote_state.git.outputs.gitops_addons_basepath
   gitops_addons_path     = data.terraform_remote_state.git.outputs.gitops_addons_path
   gitops_addons_revision = data.terraform_remote_state.git.outputs.gitops_addons_revision
 
-  gitops_platform_org      = data.terraform_remote_state.git.outputs.gitops_platform_org
   gitops_platform_url      = data.terraform_remote_state.git.outputs.gitops_platform_url
   gitops_platform_path     = data.terraform_remote_state.git.outputs.gitops_platform_path
   gitops_platform_revision = data.terraform_remote_state.git.outputs.gitops_platform_revision
 
-  gitops_workload_org      = data.terraform_remote_state.git.outputs.gitops_workload_org
-  gitops_workload_url      = data.terraform_remote_state.git.outputs.gitops_workload_url
-  gitops_workload_path     = data.terraform_remote_state.git.outputs.gitops_workload_path
-  gitops_workload_revision = data.terraform_remote_state.git.outputs.gitops_workload_revision
+  gitops_workload_url = data.terraform_remote_state.git.outputs.gitops_workload_url
 
   git_private_ssh_key = data.terraform_remote_state.git.outputs.git_private_ssh_key
 
@@ -120,8 +115,8 @@ locals {
   )
 
   argocd_apps = {
-    addons = file("${path.module}/bootstrap/addons.yaml")
-    platform = file("${path.module}/bootstrap/platform.yaml")
+    addons    = file("${path.module}/bootstrap/addons.yaml")
+    platform  = file("${path.module}/bootstrap/platform.yaml")
     workloads = file("${path.module}/bootstrap/workloads.yaml")
   }
 
@@ -146,21 +141,21 @@ resource "kubernetes_secret" "git_secrets" {
   depends_on = [kubernetes_namespace.argocd]
   for_each = {
     git-addons = {
-      type          = "git"
-      url           = local.gitops_addons_url
-      sshPrivateKey = file(pathexpand(local.git_private_ssh_key))
+      type                  = "git"
+      url                   = local.gitops_addons_url
+      sshPrivateKey         = file(pathexpand(local.git_private_ssh_key))
       insecureIgnoreHostKey = "true"
     }
     git-platform = {
-      type          = "git"
-      url           = local.gitops_platform_url
-      sshPrivateKey = file(pathexpand(local.git_private_ssh_key))
+      type                  = "git"
+      url                   = local.gitops_platform_url
+      sshPrivateKey         = file(pathexpand(local.git_private_ssh_key))
       insecureIgnoreHostKey = "true"
     }
     git-workloads = {
-      type          = "git"
-      url           = local.gitops_workload_url
-      sshPrivateKey = file(pathexpand(local.git_private_ssh_key))
+      type                  = "git"
+      url                   = local.gitops_workload_url
+      sshPrivateKey         = file(pathexpand(local.git_private_ssh_key))
       insecureIgnoreHostKey = "true"
     }
 
@@ -187,9 +182,9 @@ module "gitops_bridge_bootstrap" {
     metadata     = local.addons_metadata
     addons       = local.addons
   }
-  apps       = local.argocd_apps
-  argocd     = {
-    namespace = local.argocd_namespace
+  apps = local.argocd_apps
+  argocd = {
+    namespace        = local.argocd_namespace
     create_namespace = false
   }
   depends_on = [kubernetes_secret.git_secrets]
