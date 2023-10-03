@@ -7,17 +7,18 @@
 
 ## Use Cases
 
-1. Deploy hub-spoke EKS clusters (hub, staging, prod)
-1. Deploy namespaces and argocd project
-1. Create DynamoDB Table using ACK
-1. Deploy application on each environment
-1. Makes changes to the app in production using gitops
+1. Deploy EKS clusters (hub, staging, prod)
+1. Deploy Namespaces
+1. Create DynamoDB
+1. Deploy Applications
+1. Day 2 Operations
 
 
 # Module 1: Setup
 
 Run the following command create git repository in CodeCommit and create 3 EKS Clusters (Hub, Staging, Prod)
 ```shell
+export ACCOUNT_ID="1234556789"
 export AWS_DEFAULT_REGION="us-west-2"
 ./install.sh
 ```
@@ -36,8 +37,8 @@ echo "ArgoCD Password: $(kubectl --context hub-cluster get secrets argocd-initia
 To deploy EKS Addons we need to use Infrastructure as Code (IaC) and GitOps to work together.
 Enable the variables for the corresponding Addons in the IaC tool.
 ```shell
-sed -i '' s/"enable_aws_load_balancer_controller          = false"/"enable_aws_load_balancer_controller          = true"/ terraform/spokes/variables.tf
-sed -i '' s/"enable_ack_dynamodb                          = false"/"enable_ack_dynamodb                          = true"/ terraform/spokes/variables.tf
+sed -i '' s/"balancer_controller = false"/"balancer_controller = true"/ terraform/spokes/variables.tf
+sed -i '' s/"dynamodb                 = false"/"dynamodb                 = true"/ terraform/spokes/variables.tf
 ```
 
 Apply the IaC to create the IAM Roles for each Addon, and enable the Helm Chart to be deploy by GitOps
@@ -71,7 +72,7 @@ NAME                                               READY   STATUS    RESTARTS   
 ack-dynamodb-aws-controllers-k8s-89685f8c5-p9rwt   1/1     Running   0          3m
 ```
 
-## Deploy Platform Guardrails
+## Deploy Namespaces
 
 Create namespaces for each microservice
 
@@ -115,8 +116,8 @@ Deploy the workloads to staging and production clusters
 ```shell
 cp -r gitops/apps/* codecommit/apps/
 cd codecommit
-sed -i "s/ACCOUNT_ID/$ACCOUNT_ID/" apps/carts/staging/kustomization.yaml
-sed -i "s/ACCOUNT_ID/$ACCOUNT_ID/" apps/carts/prod/kustomization.yaml
+sed -i '' "s/ACCOUNT_ID/$ACCOUNT_ID/" apps/carts/staging/kustomization.yaml
+sed -i '' "s/ACCOUNT_ID/$ACCOUNT_ID/" apps/carts/prod/kustomization.yaml
 git add .
 git commit -m "add workloads"
 git push

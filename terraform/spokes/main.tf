@@ -264,7 +264,7 @@ module "dynamodb_workshop_irsa_aws" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.14"
 
-  role_name           = "carts-${local.environment}-role"
+  role_name = "carts-${local.environment}-role"
 
   role_policy_arns = {
     dynamodb = aws_iam_policy.dynamodb_workshop.arn
