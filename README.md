@@ -109,9 +109,9 @@ rabbitmq          Active   7m8s
 ui                Active   7m8s
 ```
 
-# Module 3: Workloads
+# Module 3: Workloads in Stage
 
-Deploy the workloads to staging and production clusters
+Deploy the workloads to staging cluster (default)
 
 ```shell
 cp -r gitops/apps/* codecommit/apps/
@@ -123,11 +123,11 @@ git commit -m "add workloads"
 git push
 cd ..
 ```
+> Files are committed for both staging and prod, but prod is inactive. In a later section we will deploy to prod
 
-Verify App is running on each cluster
+Verify App is running on staging cluster
 ```shell
 kubectl --context staging-cluster get pods -A -l app.kubernetes.io/created-by=eks-workshop
-kubectl --context prod-cluster get pods -A -l app.kubernetes.io/created-by=eks-workshop
 ```
 There should be pods running in namespaces
 ```shell
@@ -149,11 +149,49 @@ ui          ui-59b974ffcc-cbmkw              1/1     Running   0               6
 Access in
 ```shell
 echo "Staging UI URL: http://$(kubectl --context staging-cluster get svc -n ui ui-nlb -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
-echo "Production UI URL: http://$(kubectl --context prod-cluster get svc -n ui ui-nlb -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
 ```
 
 
 # Module 4: Day 2 Operations
+
+Platform team promotes the app to prod cluster, by updating the ApplicationSet `workloads.yaml`
+
+```shell
+cp -r gitops/apps/* codecommit/apps/
+cd codecommit
+sed -i '' s/"values: \[staging\]"/"values: \[staging,prod\]"/ platform/control-plane/workloads.yaml
+git add .
+git commit -m "add workloads"
+git push
+cd ..
+```
+
+Verify App is running on prod cluster
+```shell
+kubectl --context prod-cluster get pods -A -l app.kubernetes.io/created-by=eks-workshop
+```
+There should be pods running in namespaces
+```shell
+NAMESPACE   NAME                             READY   STATUS    RESTARTS        AGE
+assets      assets-7556557b4d-sfndh          1/1     Running   0               3m56s
+carts       carts-86c7db99db-5b557           1/1     Running   0               69s
+carts       carts-dynamodb-cb4b6f564-wn265   1/1     Running   0               69s
+catalog     catalog-6ccfd94978-fcrkl         1/1     Running   0               3m56s
+catalog     catalog-mysql-0                  1/1     Running   0               3m56s
+checkout    checkout-6845d66fb-b6m82         1/1     Running   0               4m
+checkout    checkout-redis-fb67f7944-j2jvr   1/1     Running   0               4m1s
+orders      orders-548b6658ff-qjsv7          1/1     Running   0               3m56s
+orders      orders-mysql-76dd47c48f-jwt7j    1/1     Running   0               3m56s
+ui          ui-59b974ffcc-cbmkw              1/1     Running   0               69s
+```
+
+## Access Application UI in Prod
+
+Access in
+```shell
+echo "Production UI URL: http://$(kubectl --context prod-cluster get svc -n ui ui-nlb -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
+```
+
 
 ## Update Workload in Production
 
