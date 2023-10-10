@@ -74,11 +74,19 @@ ack-dynamodb-aws-controllers-k8s-89685f8c5-p9rwt   1/1     Running   0          
 
 ## Deploy Namespaces
 
+Set environment variables with the GitHub and CodeCommit repos directory names - they will be referenced in the subsequent instructions that populate the CodeCommit repo.
+
+```shell
+export GITHUB_REPO=argocd-on-amazon-eks-workshop
+export CODECOMMIT_REPO=gitops-bridge-argocd
+```
+
 Create namespaces for each microservice
 
 ```shell
-cp -r gitops/platform/* codecommit/platform/
-cd codecommit
+mkdir ${CODECOMMIT_REPO}/platform
+cp -r ${GITHUB_REPO}/gitops/platform/* ${CODECOMMIT_REPO}/platform/
+cd ${CODECOMMIT_REPO}
 git add .
 git commit -m "add platform"
 git push
@@ -114,8 +122,9 @@ ui                Active   7m8s
 Deploy the workloads to staging cluster (default)
 
 ```shell
-cp -r gitops/apps/* codecommit/apps/
-cd codecommit
+mkdir ${CODECOMMIT_REPO}/apps
+cp -r ${GITHUB_REPO}/gitops/apps/* ${CODECOMMIT_REPO}/apps/
+cd ${CODECOMMIT_REPO}
 sed -i '' "s/ACCOUNT_ID/$ACCOUNT_ID/" apps/carts/staging/kustomization.yaml
 sed -i '' "s/ACCOUNT_ID/$ACCOUNT_ID/" apps/carts/prod/kustomization.yaml
 git add .
