@@ -115,8 +115,8 @@ locals {
   )
 
   argocd_apps = {
-    addons    = file("${path.module}/bootstrap/addons.yaml")
-    platform  = file("${path.module}/bootstrap/platform.yaml")
+    addons   = file("${path.module}/bootstrap/addons.yaml")
+    platform = file("${path.module}/bootstrap/platform.yaml")
   }
 
   azs = slice(data.aws_availability_zones.available.names, 0, 3)
@@ -276,7 +276,10 @@ module "eks" {
   cluster_name                   = local.name
   cluster_version                = local.cluster_version
   cluster_endpoint_public_access = true
-
+  # Adding root permission so that workshop participant can update the terraform configuration if running from differnet user than the one created the cluster
+  kms_key_administrators = [
+    "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
+  ]
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
