@@ -1,0 +1,25 @@
+{{- if and .Values.argoProject .Values.argoProject.enabled }}
+{{- with .Values.argoProject }}
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: {{ if .name -}}
+        {{ .name -}}
+        {{ else -}}
+        {{ include "team.name" $ -}}
+        {{ end }}
+  namespace: {{ .namespace }}
+  annotations:
+    {{- include "team.annotations" $ | nindent 4 }}
+    {{- if .annotations }}
+    {{- toYaml .annotations | nindent 4 }}
+    {{- end }}
+  labels:
+    {{- include "team.labels" $ | nindent 4 }}
+    {{- if .labels }}
+    {{- toYaml .labels | nindent 4 }}
+    {{- end }}
+spec:
+  {{- toYaml .spec | nindent 2 }}
+{{- end }}
+{{- end }}

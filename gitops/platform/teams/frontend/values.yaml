@@ -1,0 +1,55 @@
+name: frontend
+
+namespaces:
+  assets:
+    labels:
+      additionalLabels:
+        app.kubernetes.io/created-by: eks-workshop
+  ui:
+    labels:
+      additionalLabels:
+        app.kubernetes.io/created-by: eks-workshop
+
+argoProject:
+  spec:
+    destinations:
+    - namespace: ui
+      name: spoke-prod
+    - namespace: assets
+      name: spoke-prod
+    - namespace: ui
+      name: spoke-staging
+    - namespace: assets
+      name: spoke-staging
+    # Allow all namespaced-scoped resources to be created, except for ResourceQuota, LimitRange, NetworkPolicy
+    namespaceResourceBlacklist:
+    - group: ''
+      kind: ResourceQuota
+    - group: ''
+      kind: LimitRange
+    - group: ''
+      kind: NetworkPolicy
+    # Deny all namespaced-scoped resources from being created, except for these
+    namespaceResourceWhitelist:
+    - group: ''
+      kind: Pod
+    - group: 'apps'
+      kind: Deployment
+    - group: 'apps'
+      kind: StatefulSet
+    - group: 'apps'
+      kind: ReplicaSet
+    - group: ''
+      kind: Service
+    - group: ''
+      kind: ServiceAccount
+    - group: ''
+      kind: ConfigMap
+    - group: ''
+      kind: Secret
+    - group: 'rbac.authorization.k8s.io'
+      kind: RoleBinding
+    - group: 'rbac.authorization.k8s.io'
+      kind: Role
+    - group: 'dynamodb.services.k8s.aws'
+      kind: Table

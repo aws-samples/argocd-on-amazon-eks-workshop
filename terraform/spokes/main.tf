@@ -100,7 +100,13 @@ locals {
     enable_secrets_store_csi_driver        = try(var.addons.enable_secrets_store_csi_driver, false)
     enable_vpa                             = try(var.addons.enable_vpa, false)
   }
-  addons = merge(local.aws_addons, local.oss_addons, { kubernetes_version = local.cluster_version }, { aws_cluster_name = module.eks.cluster_name })
+  addons = merge(
+    local.aws_addons,
+    local.oss_addons,
+    { kubernetes_version = local.cluster_version },
+    { aws_cluster_name = module.eks.cluster_name },
+    { workloads = "true" }
+  )
 
   addons_metadata = merge(
     module.eks_blueprints_addons.gitops_metadata,

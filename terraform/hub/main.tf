@@ -111,12 +111,16 @@ locals {
       platform_repo_url      = local.gitops_platform_url
       platform_repo_path     = local.gitops_platform_path
       platform_repo_revision = local.gitops_platform_revision
+    },
+    {
+      workload_repo_url      = local.gitops_workload_url
     }
   )
 
   argocd_apps = {
     addons   = file("${path.module}/bootstrap/addons.yaml")
     platform = file("${path.module}/bootstrap/platform.yaml")
+    workloads = file("${path.module}/bootstrap/workloads.yaml")
   }
 
   azs = slice(data.aws_availability_zones.available.names, 0, 3)
