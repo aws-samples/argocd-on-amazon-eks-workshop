@@ -32,8 +32,12 @@ terraform workspace select $env
 # Delete the Ingress/SVC before removing the addons
 TMPFILE=$(mktemp)
 terraform output -raw configure_kubectl > "$TMPFILE"
-source "$TMPFILE"
-kubectl delete svc --all -n ui
+# check if TMPFILE contains the string "No outputs found"
+if [[ ! $(cat $TMPFILE) == *"No outputs found"* ]]; then
+  echo "No outputs found, skipping kubectl delete"
+  source "$TMPFILE"
+  kubectl delete svc --all -n ui
+fi
 
 terraform destroy -target="module.gitops_bridge_bootstrap" -auto-approve -var-file="workspaces/${env}.tfvars"
 terraform destroy -target="module.eks_blueprints_addons" -auto-approve -var-file="workspaces/${env}.tfvars"

@@ -1,6 +1,13 @@
 data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {}
 data "aws_region" "current" {}
+data "aws_iam_session_context" "current" {
+  # This data source provides information on the IAM source role of an STS assumed role
+  # For non-role ARNs, this data source simply passes the ARN through issuer ARN
+  # Ref https://github.com/terraform-aws-modules/terraform-aws-eks/issues/2327#issuecomment-1355581682
+  # Ref https://github.com/hashicorp/terraform-provider-aws/issues/28381
+  arn = data.aws_caller_identity.current.arn
+}
 
 provider "helm" {
   kubernetes {
@@ -120,7 +127,6 @@ locals {
   argocd_apps = {
     addons   = file("${path.module}/bootstrap/addons.yaml")
     platform = file("${path.module}/bootstrap/platform.yaml")
-    workloads = file("${path.module}/bootstrap/workloads.yaml")
   }
 
   azs = slice(data.aws_availability_zones.available.names, 0, 3)
@@ -283,6 +289,7 @@ module "eks" {
   # Adding root permission so that workshop participant can update the terraform configuration if running from differnet user than the one created the cluster
   kms_key_administrators = [
     "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
+    data.aws_iam_session_context.current.issuer_arn
   ]
 
   vpc_id     = module.vpc.vpc_id

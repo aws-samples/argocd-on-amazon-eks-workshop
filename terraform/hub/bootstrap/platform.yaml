@@ -7,60 +7,25 @@ spec:
   syncPolicy:
     preserveResourcesOnDeletion: true
   generators:
-    # matrix 'parent' generator
-    - matrix:
-        generators:
-          - clusters:
-              selector:
-                matchLabels:
-                  workloads: 'true'
-              values:
-                chart: teams
-          - git:
-              repoURL: '{{metadata.annotations.platform_repo_url}}'
-              revision: '{{metadata.annotations.platform_repo_revision}}'
-              directories:
-                - path: '{{metadata.annotations.platform_repo_path}}/teams/*'
-    - matrix:
-        generators:
-          - clusters:
-              selector:
-                matchLabels:
-                  environment: control-plane
-              values:
-                chart: projects
-          - git:
-              repoURL: '{{metadata.annotations.platform_repo_url}}'
-              revision: '{{metadata.annotations.platform_repo_revision}}'
-              directories:
-                - path: '{{metadata.annotations.platform_repo_path}}/teams/*'
-
+  - clusters:
+      selector:
+        matchLabels:
+          environment: control-plane
   template:
     metadata:
-      name: 'platform-{{metadata.labels.environment}}-{{path.basename}}-{{values.chart}}'
+      name: 'platform'
     spec:
       project: default
       source:
         repoURL: '{{metadata.annotations.platform_repo_url}}'
-        path: '{{metadata.annotations.platform_repo_path}}/charts/{{values.chart}}'
+        path: '{{metadata.annotations.platform_repo_path}}/control-plane'
         targetRevision: '{{metadata.annotations.platform_repo_revision}}'
-        helm:
-          releaseName: '{{path.basename}}'
-          valueFiles:
-          - '../../teams/{{path.basename}}/values.yaml'
-          values: |
-            argoProject:
-              spec:
-                sourceRepos:
-                - '{{metadata.annotations.workload_repo_url}}'
+        directory:
+          recurse: true
+          exclude: exclude/*
       destination:
+        namespace: 'argocd'
         name: '{{name}}'
       syncPolicy:
         automated:
           allowEmpty: true
-        retry:
-          backoff:
-            duration: 1m
-          limit: 10
-        syncOptions:
-          - CreateNamespace=true
