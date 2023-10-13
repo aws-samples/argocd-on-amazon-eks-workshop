@@ -44,4 +44,4 @@ spec:
         retry:
           backoff:
             duration: 1m
-          limit: 10
+          limit: 100
