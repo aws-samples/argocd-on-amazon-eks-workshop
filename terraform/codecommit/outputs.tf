@@ -16,15 +16,15 @@ output "git_private_ssh_key" {
 }
 
 output "gitops_addons_url" {
-  value = "${local.gitops_workload_org}/${local.gitops_workload_repo}"
+  value = "${local.gitops_addons_org}/${local.gitops_addons_repo}"
 }
 output "gitops_addons_org" {
   description = "Git repository org/user contains for addons"
-  value       = local.gitops_workload_org
+  value       = local.gitops_addons_org
 }
 output "gitops_addons_repo" {
   description = "Git repository contains for addons"
-  value       = local.gitops_workload_repo
+  value       = local.gitops_addons_repo
 }
 output "gitops_addons_basepath" {
   description = "Git repository base path for addons"
@@ -40,15 +40,19 @@ output "gitops_addons_revision" {
 }
 
 output "gitops_platform_url" {
-  value = "${local.gitops_workload_org}/${local.gitops_workload_repo}"
+  value = "${local.gitops_platform_org}/${local.gitops_platform_repo}"
 }
 output "gitops_platform_org" {
   description = "Git repository org/user contains for platform"
-  value       = local.gitops_workload_org
+  value       = local.gitops_platform_org
 }
 output "gitops_platform_repo" {
   description = "Git repository contains for platform"
   value       = local.gitops_workload_repo
+}
+output "gitops_platform_basepath" {
+  description = "Git repository base path for platform"
+  value       = var.gitops_platform_basepath
 }
 output "gitops_platform_path" {
   description = "Git repository path for platform"
@@ -69,6 +73,10 @@ output "gitops_workload_org" {
 output "gitops_workload_repo" {
   description = "Git repository contains for workload"
   value       = local.gitops_workload_repo
+}
+output "gitops_workload_basepath" {
+  description = "Git repository base path for workload"
+  value       = var.gitops_workload_basepath
 }
 output "gitops_workload_path" {
   description = "Git repository path for workload"

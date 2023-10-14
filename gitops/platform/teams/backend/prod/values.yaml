@@ -1,4 +1,6 @@
 name: backend
+labels:
+  environment: prod
 
 namespaces:
   carts:
@@ -77,3 +79,5 @@ argoProject:
       kind: Role
     - group: 'dynamodb.services.k8s.aws'
       kind: Table
+    - group: 'autoscaling'
+      kind: HorizontalPodAutoscaler

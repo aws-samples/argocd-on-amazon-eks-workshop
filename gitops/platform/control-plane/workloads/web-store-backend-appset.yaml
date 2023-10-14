@@ -11,15 +11,17 @@ spec:
         generators:
           - clusters:
               selector:
-                matchLabels:
-                  workloads: 'true'
+                matchExpressions:
+                  - key: environment
+                    operator: In
+                    values: [staging]
               values:
                 team: backend
           - git:
               repoURL: '{{metadata.annotations.workload_repo_url}}'
               revision: '{{metadata.annotations.workload_repo_revision}}'
               directories:
-                - path: '{{metadata.annotations.workload_repo_path}}/{{values.team}}/*'
+                - path: '{{metadata.annotations.workload_repo_basepath}}{{values.team}}/*'
 
   template:
     metadata:
@@ -33,7 +35,7 @@ spec:
       project: '{{values.team}}'
       source:
         repoURL: '{{metadata.annotations.workload_repo_url}}'
-        path: '{{.path.path}}/{{metadata.labels.environment}}'
+        path: '{{path}}/{{metadata.labels.environment}}'
         targetRevision: '{{metadata.annotations.workload_repo_revision}}'
       destination:
         namespace: '{{path.basename}}'

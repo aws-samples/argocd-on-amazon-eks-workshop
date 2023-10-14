@@ -9,22 +9,16 @@ configMapGenerator:
   behavior: merge
   literals:
   - CARTS_DYNAMODB_TABLENAME=Items-Prod
+  - CARTS_DYNAMODB_CREATETABLE="false"
 
 patches:
   - patch: |-
       apiVersion: dynamodb.services.k8s.aws/v1alpha1
       kind: Table
       metadata:
-        name: items-prod
+        name: items
       spec:
         tableName: Items-Prod
-    options:
-      allowNameChange: true
-    target:
-      group: dynamodb.services.k8s.aws
-      version: v1alpha1
-      kind: Table
-      Name: items
   - patch: |-
       apiVersion: v1
       kind: ServiceAccount
@@ -32,7 +26,3 @@ patches:
         name: carts
         annotations:
           eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/carts-prod-role
-    target:
-      version: v1
-      kind: ServiceAccount
-      Name: carts

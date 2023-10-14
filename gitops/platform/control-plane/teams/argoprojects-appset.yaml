@@ -7,17 +7,19 @@ spec:
   syncPolicy:
     preserveResourcesOnDeletion: true
   generators:
-    - clusters:
-        selector:
-          matchLabels:
-            environment: control-plane
-        values:
-          chart: argoprojects
-    - git:
-        repoURL: '{{metadata.annotations.platform_repo_url}}'
-        revision: '{{metadata.annotations.platform_repo_revision}}'
-        directories:
-          - path: '{{metadata.annotations.platform_repo_path}}/teams/*'
+  - matrix:
+      generators:
+        - clusters:
+            selector:
+              matchLabels:
+                environment: control-plane
+            values:
+              chart: argoprojects
+        - git:
+            repoURL: '{{metadata.annotations.platform_repo_url}}'
+            revision: '{{metadata.annotations.platform_repo_revision}}'
+            directories:
+              - path: '{{metadata.annotations.platform_repo_basepath}}teams/*'
 
   template:
     metadata:
@@ -29,7 +31,7 @@ spec:
       project: default
       source:
         repoURL: '{{metadata.annotations.platform_repo_url}}'
-        path: '{{metadata.annotations.platform_repo_path}}/charts/{{values.chart}}'
+        path: '{{metadata.annotations.platform_repo_basepath}}charts/{{values.chart}}'
         targetRevision: '{{metadata.annotations.platform_repo_revision}}'
         helm:
           releaseName: '{{path.basename}}'

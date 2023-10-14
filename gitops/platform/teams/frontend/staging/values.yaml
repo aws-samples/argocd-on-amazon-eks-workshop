@@ -1,4 +1,6 @@
 name: frontend
+labels:
+  environment: staging
 
 namespaces:
   assets:
@@ -53,3 +55,5 @@ argoProject:
       kind: Role
     - group: 'dynamodb.services.k8s.aws'
       kind: Table
+    - group: 'autoscaling'
+      kind: HorizontalPodAutoscaler

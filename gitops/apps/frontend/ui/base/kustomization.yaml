@@ -5,4 +5,6 @@ resources:
 - serviceAccount.yaml
 - service.yaml
 - deployment.yaml
+- hpa.yaml
 - nlb.yaml
+

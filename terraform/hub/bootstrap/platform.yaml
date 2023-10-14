@@ -18,7 +18,7 @@ spec:
       project: default
       source:
         repoURL: '{{metadata.annotations.platform_repo_url}}'
-        path: '{{metadata.annotations.platform_repo_path}}/control-plane'
+        path: '{{metadata.annotations.platform_repo_basepath}}{{metadata.annotations.platform_repo_path}}'
         targetRevision: '{{metadata.annotations.platform_repo_revision}}'
         directory:
           recurse: true

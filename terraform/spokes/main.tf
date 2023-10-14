@@ -57,10 +57,12 @@ locals {
   gitops_addons_revision = data.terraform_remote_state.git.outputs.gitops_addons_revision
 
   gitops_platform_url      = data.terraform_remote_state.git.outputs.gitops_platform_url
+  gitops_platform_basepath = data.terraform_remote_state.git.outputs.gitops_platform_basepath
   gitops_platform_path     = data.terraform_remote_state.git.outputs.gitops_platform_path
   gitops_platform_revision = data.terraform_remote_state.git.outputs.gitops_platform_revision
 
   gitops_workload_url      = data.terraform_remote_state.git.outputs.gitops_workload_url
+  gitops_workload_basepath = data.terraform_remote_state.git.outputs.gitops_workload_basepath
   gitops_workload_path     = data.terraform_remote_state.git.outputs.gitops_workload_path
   gitops_workload_revision = data.terraform_remote_state.git.outputs.gitops_workload_revision
 
@@ -132,11 +134,13 @@ locals {
     },
     {
       platform_repo_url      = local.gitops_platform_url
+      platform_repo_basepath = local.gitops_platform_basepath
       platform_repo_path     = local.gitops_platform_path
       platform_repo_revision = local.gitops_platform_revision
     },
     {
       workload_repo_url      = local.gitops_workload_url
+      workload_repo_basepath = local.gitops_workload_basepath
       workload_repo_path     = local.gitops_workload_path
       workload_repo_revision = local.gitops_workload_revision
     }
@@ -243,8 +247,7 @@ module "eks_blueprints_addons" {
 # EKS ACK Addons
 ################################################################################
 module "eks_ack_addons" {
-  source = "github.com/csantanapr/terraform-aws-eks-ack-addons?ref=gitops-bridge"
-
+  source = "aws-ia/eks-ack-addons/aws"
 
   cluster_name      = module.eks.cluster_name
   cluster_endpoint  = module.eks.cluster_endpoint
@@ -306,22 +309,6 @@ data "aws_iam_policy_document" "dynamodb_workshop" {
   statement {
     effect = "Allow"
     actions = [
-      "dynamodb:ListTables"
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "dynamodb:*"
-    ]
-    resources = ["arn:aws:dynamodb:${local.region}:${data.aws_caller_identity.current.account_id}:table/${local.table_name}/index/*"]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
       "dynamodb:*"
     ]
 
@@ -330,7 +317,6 @@ data "aws_iam_policy_document" "dynamodb_workshop" {
       "arn:aws:dynamodb:${local.region}:${data.aws_caller_identity.current.account_id}:table/${local.table_name}/index/*"
     ]
   }
-
 }
 
 ################################################################################
