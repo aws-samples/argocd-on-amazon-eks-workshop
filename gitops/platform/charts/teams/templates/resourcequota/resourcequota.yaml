@@ -1,0 +1,25 @@
+{{- range .Values.namespaces }}
+{{- range .resourceQuotas }}
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: {{ .name }}
+  annotations:
+    {{- include "team.annotations" $ | nindent 4 }}
+    {{- if .annotations }}
+    {{- with .annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- end }}
+  labels:
+    {{- include "team.labels" $ | nindent 4 }}
+    {{- if .labels }}
+    {{- with .labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- end }}
+spec:
+  {{- toYaml .spec | nindent 2 }}
+{{- end }}
+{{- end }}

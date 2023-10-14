@@ -1,11 +1,21 @@
 data "aws_region" "current" {}
 
 locals {
-  addon_context = {
-    eks_cluster_id = "gitops-bridge"
-  }
+
+  context_prefix = "gitops-bridge"
+
+  gitops_workload_repo_name  = var.gitops_workload_repo_name
   gitops_workload_org        = "ssh://${aws_iam_user_ssh_key.gitops.id}@git-codecommit.${data.aws_region.current.id}.amazonaws.com"
-  gitops_workload_repo       = "v1/repos/${local.addon_context.eks_cluster_id}-argocd"
+  gitops_workload_repo       = "v1/repos/${local.gitops_workload_repo_name}"
+
+  gitops_platform_repo_name  = var.gitops_platform_repo_name
+  gitops_platform_org        = "ssh://${aws_iam_user_ssh_key.gitops.id}@git-codecommit.${data.aws_region.current.id}.amazonaws.com"
+  gitops_platform_repo       = "v1/repos/${local.gitops_platform_repo_name}"
+
+  gitops_addons_repo_name  = var.gitops_addons_repo_name
+  gitops_addons_org        = "ssh://${aws_iam_user_ssh_key.gitops.id}@git-codecommit.${data.aws_region.current.id}.amazonaws.com"
+  gitops_addons_repo       = "v1/repos/${local.gitops_addons_repo_name}"
+
   ssh_key_basepath           = var.ssh_key_basepath
   git_private_ssh_key        = "${local.ssh_key_basepath}/gitops_ssh.pem"
   git_private_ssh_key_config = "${local.ssh_key_basepath}/config"
@@ -19,13 +29,23 @@ locals {
 
 }
 
-resource "aws_codecommit_repository" "argocd" {
-  repository_name = "${local.addon_context.eks_cluster_id}-argocd"
-  description     = "CodeCommit repository for ArgoCD"
+resource "aws_codecommit_repository" "workloads" {
+  repository_name = local.gitops_workload_repo_name
+  description     = "CodeCommit repository for ArgoCD workloads"
+}
+
+resource "aws_codecommit_repository" "platform" {
+  repository_name = local.gitops_platform_repo_name
+  description     = "CodeCommit repository for ArgoCD platform"
+}
+
+resource "aws_codecommit_repository" "addons" {
+  repository_name = local.gitops_addons_repo_name
+  description     = "CodeCommit repository for ArgoCD addons"
 }
 
 resource "aws_iam_user" "gitops" {
-  name = "${local.addon_context.eks_cluster_id}-gitops"
+  name = "${local.context_prefix}-gitops"
   path = "/"
 }
 
@@ -130,13 +150,15 @@ data "aws_iam_policy_document" "gitops_access" {
     ]
     effect = "Allow"
     resources = [
-      aws_codecommit_repository.argocd.arn
+      aws_codecommit_repository.workloads.arn,
+      aws_codecommit_repository.platform.arn,
+      aws_codecommit_repository.addons.arn
     ]
   }
 }
 
 resource "aws_iam_policy" "gitops_access" {
-  name   = "${local.addon_context.eks_cluster_id}-gitops"
+  name   = "${local.context_prefix}-gitops"
   path   = "/"
   policy = data.aws_iam_policy_document.gitops_access.json
 }

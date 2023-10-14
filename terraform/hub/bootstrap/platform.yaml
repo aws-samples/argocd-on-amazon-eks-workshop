@@ -7,24 +7,25 @@ spec:
   syncPolicy:
     preserveResourcesOnDeletion: true
   generators:
-    - clusters: {}
+  - clusters:
+      selector:
+        matchLabels:
+          environment: control-plane
   template:
     metadata:
-      name: 'platform-{{metadata.labels.environment}}'
+      name: 'platform'
     spec:
       project: default
       source:
         repoURL: '{{metadata.annotations.platform_repo_url}}'
-        path: '{{metadata.annotations.platform_repo_path}}/{{metadata.labels.environment}}'
+        path: '{{metadata.annotations.platform_repo_basepath}}{{metadata.annotations.platform_repo_path}}'
         targetRevision: '{{metadata.annotations.platform_repo_revision}}'
+        directory:
+          recurse: true
+          exclude: exclude/*
       destination:
+        namespace: 'argocd'
         name: '{{name}}'
       syncPolicy:
         automated:
           allowEmpty: true
-        retry:
-          backoff:
-            duration: 1m
-          limit: 10
-        syncOptions:
-          - CreateNamespace=true
