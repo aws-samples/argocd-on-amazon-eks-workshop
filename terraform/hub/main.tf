@@ -301,11 +301,17 @@ module "eks" {
   cluster_name                   = local.name
   cluster_version                = local.cluster_version
   cluster_endpoint_public_access = true
-  # Adding root permission so that workshop participant can update the terraform configuration if running from differnet user than the one created the cluster
-  kms_key_administrators = [
-    "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
-    data.aws_iam_session_context.current.issuer_arn
-  ]
+
+  # Combine root account, current user/role and additinoal roles to be able to access the cluster KMS key - required for terraform updates
+  kms_key_administrators = distinct(concat([
+    "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"],
+    var.kms_key_admin_roles,
+    [data.aws_iam_session_context.current.issuer_arn]
+
+  ))
+  # Manage aws-auth configmap to be able to add workshop roles into it
+  manage_aws_auth_configmap = true
+  aws_auth_roles            = var.aws_auth_roles
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
