@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOTDIR=$SCRIPTDIR
 [[ -n "${DEBUG:-}" ]] && set -x
-
+GITOPS_DIR=$SCRIPTDIR/gitops-repos
 
 # Reset directory
 rm -rf ${GITOPS_DIR}
