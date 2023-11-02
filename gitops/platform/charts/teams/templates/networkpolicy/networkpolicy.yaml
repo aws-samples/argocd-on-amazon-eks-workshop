@@ -1,10 +1,11 @@
-{{- range .Values.namespaces }}
-{{- range .networkPolicies }}
+{{- range $name, $tenant := .Values.namespaces }}
+{{- range $tenant.networkPolicies }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: {{ .name }}
+  namespace: {{ $name }}
   annotations:
     {{- include "team.annotations" $ | nindent 4 }}
     {{- if .annotations }}
