@@ -18,8 +18,9 @@ gitops_addons_url="$(terraform -chdir=${ROOTDIR}/terraform/codecommit output -ra
 git clone ${gitops_workload_url} ${GITOPS_DIR}/apps
 
 git clone ${gitops_platform_url} ${GITOPS_DIR}/platform
-mkdir -p ${GITOPS_DIR}/platform/charts && cp -r ${ROOTDIR}/gitops/platform/charts/*  ${GITOPS_DIR}/platform/charts/
-mkdir -p ${GITOPS_DIR}/platform/bootstrap && cp -r ${ROOTDIR}/gitops/platform/bootstrap/*  ${GITOPS_DIR}/platform/bootstrap/
+# mkdir -p ${GITOPS_DIR}/platform/charts && cp -r ${ROOTDIR}/gitops/platform/charts/*  ${GITOPS_DIR}/platform/charts/
+# mkdir -p ${GITOPS_DIR}/platform/bootstrap && cp -r ${ROOTDIR}/gitops/platform/bootstrap/*  ${GITOPS_DIR}/platform/bootstrap/
+mkdir -p ${GITOPS_DIR}/platform/ && cp -r ${ROOTDIR}/gitops/platform/*  ${GITOPS_DIR}/platform/
 git -C ${GITOPS_DIR}/platform add . || true
 git -C ${GITOPS_DIR}/platform commit -m "initial commit" || true
 git -C ${GITOPS_DIR}/platform push  || true
