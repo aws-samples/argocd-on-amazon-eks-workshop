@@ -12,7 +12,7 @@ variable "gitops_addons_basepath" {
 }
 variable "gitops_addons_path" {
   description = "Git repository path for addons"
-  default     = "bootstrap/control-plane/addons"
+  default     = "bootstrap"
 }
 variable "gitops_addons_revision" {
   description = "Git repository revision/branch/ref for addons"
