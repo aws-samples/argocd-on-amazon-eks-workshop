@@ -29,7 +29,7 @@ variable "gitops_platform_basepath" {
 }
 variable "gitops_platform_path" {
   description = "Git repository path for workload"
-  default     = "control-plane"
+  default     = "bootstrap"
 }
 variable "gitops_platform_revision" {
   description = "Git repository revision/branch/ref for workload"

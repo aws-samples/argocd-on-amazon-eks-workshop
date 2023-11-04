@@ -173,7 +173,7 @@ echo "Staging UI URL: http://$(kubectl --context staging-cluster get svc -n ui u
 Platform team promotes the app to prod cluster, by updating the ApplicationSet `workloads.yaml`
 
 ```shell
-sed -i '' s/"values: \[staging\]"/"values: \[staging,prod\]"/ $GITOPS_DIR/platform/control-plane/workloads/*appset.yaml
+sed -i '' s/"values: \[staging\]"/"values: \[staging,prod\]"/ $GITOPS_DIR/platform/bootstrap/workloads/*appset.yaml
 git -C $GITOPS_DIR/platform add .
 git -C $GITOPS_DIR/platform commit -m "add workloads"
 git -C $GITOPS_DIR/platform push
