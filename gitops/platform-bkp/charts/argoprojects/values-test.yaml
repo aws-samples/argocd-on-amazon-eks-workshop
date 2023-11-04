@@ -1,0 +1,23 @@
+name: myteams
+
+annotations:
+  toplevel: annotations
+labels:
+  toplevel: labels
+
+argoProject:
+  enabled: true
+  name: frontend
+  namespace: argocd
+  annotations: {}
+  labels: {}
+  spec:
+    clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+    destinations:
+    - name: '*'
+      namespace: '*'
+      server: '*'
+    sourceRepos:
+    - '*'
