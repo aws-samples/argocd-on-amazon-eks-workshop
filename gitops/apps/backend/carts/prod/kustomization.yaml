@@ -22,4 +22,4 @@ resources:
 #      metadata:
 #        name: carts
 #        annotations:
-#          eks.amazonaws.com/role-arn: arn:aws:iam::444720453142:role/carts-prod-role
+#          eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/carts-prod-role
