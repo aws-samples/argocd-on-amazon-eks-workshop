@@ -43,6 +43,7 @@ spec:
       syncPolicy:
         automated:
           allowEmpty: true
+          prune: true
         retry:
           backoff:
             duration: 1m

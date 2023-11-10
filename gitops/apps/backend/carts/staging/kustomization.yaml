@@ -4,25 +4,23 @@ resources:
 - ../base
 #- try-namespace.yaml # namespaces are not allowed to be created by app teams
 
-configMapGenerator:
-- name: carts
-  behavior: merge
-  literals:
-  - CARTS_DYNAMODB_TABLENAME=Items-Staging
-  - CARTS_DYNAMODB_CREATETABLE="false"
-
-patches:
-  - patch: |-
-      apiVersion: dynamodb.services.k8s.aws/v1alpha1
-      kind: Table
-      metadata:
-        name: items
-      spec:
-        tableName: Items-Staging
-  - patch: |-
-      apiVersion: v1
-      kind: ServiceAccount
-      metadata:
-        name: carts
-        annotations:
-          eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/carts-staging-role
+#configMapGenerator: # uncomment the following snippet when using Amazon DynamoDB instead of DynamoDB local
+#- name: carts
+#  behavior: merge
+#  literals:
+#  - CARTS_DYNAMODB_TABLENAME=Items-Staging
+#patches:
+#  - patch: |-
+#      apiVersion: dynamodb.services.k8s.aws/v1alpha1
+#      kind: Table
+#      metadata:
+#        name: items
+#      spec:
+#        tableName: Items-Staging
+#  - patch: |-
+#      apiVersion: v1
+#      kind: ServiceAccount
+#      metadata:
+#        name: carts
+#        annotations:
+#          eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/carts-staging-role
