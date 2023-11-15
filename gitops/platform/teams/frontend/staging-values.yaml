@@ -1,0 +1,13 @@
+name: frontend
+labels:
+  environment: staging
+
+namespaces:
+  assets:
+    labels:
+      additionalLabels:
+        app.kubernetes.io/created-by: eks-workshop
+  ui:
+    labels:
+      additionalLabels:
+        app.kubernetes.io/created-by: eks-workshop

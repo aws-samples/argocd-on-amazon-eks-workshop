@@ -18,12 +18,12 @@
 
 Run the following command create git repository in CodeCommit and create 3 EKS Clusters (Hub, Staging, Prod)
 ```shell
-export ACCOUNT_ID="1234556789"
+export ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
 export AWS_DEFAULT_REGION="us-west-2"
-export WORKING_DIR="$HOME/environment"      #For local dev; export WORKING_DIR="$PWD"
-export WORKSHOP_DIR="$WORKING_DIR/workshop" #For local dev; export WORKSHOP_DIR="$PWD"
-export GITOPS_DIR="$WORKING_DIR/gitops"     #For local dev; export GITOPS_DIR="$WORKING_DIR/codecommit-repo"
-git clone https://github.com/aws-samples/argocd-on-amazon-eks-workshop $WORKSHOP_DIR
+export WORKING_DIR="$HOME/environment" #For local dev; export WORKING_DIR="$PWD/environment"
+export WORKSHOP_DIR="$WORKING_DIR/argocd-on-amazon-eks-workshop" #For local dev; export WORKSHOP_DIR="$PWD"
+export GITOPS_DIR="$WORKING_DIR/gitops-repos"
+git clone -b riv23 https://github.com/aws-samples/argocd-on-amazon-eks-workshop $WORKSHOP_DIR
 cd $WORKSHOP_DIR
 ./install.sh
 ```
