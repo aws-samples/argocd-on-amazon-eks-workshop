@@ -93,7 +93,7 @@ locals {
     #enable_ingress_nginx                         = true
     #enable_kyverno                               = true
     #enable_kube_prometheus_stack                 = true
-    #enable_metrics_server = true
+    enable_metrics_server = true
     #enable_prometheus_adapter                    = true
     #enable_secrets_store_csi_driver              = true
     #enable_vpa                                   = true
@@ -192,8 +192,8 @@ resource "kubernetes_secret" "git_secrets" {
 # GitOps Bridge: Bootstrap
 ################################################################################
 module "gitops_bridge_bootstrap" {
-  source = "github.com/gitops-bridge-dev/gitops-bridge-argocd-bootstrap-terraform?ref=v2.0.0"
-
+  source  = "gitops-bridge-dev/gitops-bridge/helm"
+  version = "0.0.1"
   cluster = {
     cluster_name = module.eks.cluster_name
     environment  = local.environment
@@ -203,6 +203,8 @@ module "gitops_bridge_bootstrap" {
   apps = local.argocd_apps
   argocd = {
     namespace        = local.argocd_namespace
+    chart_version    = "5.51.1"
+    timeout          = 600
     create_namespace = false
     set = [
       {

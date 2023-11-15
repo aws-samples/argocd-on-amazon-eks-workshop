@@ -37,7 +37,7 @@ spec:
         helm:
           releaseName: '{{path.basename}}'
           valueFiles:
-          - '../../teams/{{path.basename}}/{{metadata.labels.environment}}/values.yaml'
+          - '../../teams/{{path.basename}}/{{metadata.labels.environment}}-values.yaml'
       destination:
         name: '{{name}}'
       syncPolicy:
