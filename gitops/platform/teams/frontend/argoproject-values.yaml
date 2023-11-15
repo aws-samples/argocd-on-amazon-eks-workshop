@@ -1,17 +1,3 @@
-name: frontend
-labels:
-  environment: prod
-
-namespaces:
-  assets:
-    labels:
-      additionalLabels:
-        app.kubernetes.io/created-by: eks-workshop
-  ui:
-    labels:
-      additionalLabels:
-        app.kubernetes.io/created-by: eks-workshop
-
 argoProject:
   spec:
     destinations:
