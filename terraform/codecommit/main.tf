@@ -4,17 +4,17 @@ locals {
 
   context_prefix = "gitops-bridge"
 
-  gitops_workload_repo_name  = var.gitops_workload_repo_name
-  gitops_workload_org        = "ssh://${aws_iam_user_ssh_key.gitops.id}@git-codecommit.${data.aws_region.current.id}.amazonaws.com"
-  gitops_workload_repo       = "v1/repos/${local.gitops_workload_repo_name}"
+  gitops_workload_repo_name = var.gitops_workload_repo_name
+  gitops_workload_org       = "ssh://${aws_iam_user_ssh_key.gitops.id}@git-codecommit.${data.aws_region.current.id}.amazonaws.com"
+  gitops_workload_repo      = "v1/repos/${local.gitops_workload_repo_name}"
 
-  gitops_platform_repo_name  = var.gitops_platform_repo_name
-  gitops_platform_org        = "ssh://${aws_iam_user_ssh_key.gitops.id}@git-codecommit.${data.aws_region.current.id}.amazonaws.com"
-  gitops_platform_repo       = "v1/repos/${local.gitops_platform_repo_name}"
+  gitops_platform_repo_name = var.gitops_platform_repo_name
+  gitops_platform_org       = "ssh://${aws_iam_user_ssh_key.gitops.id}@git-codecommit.${data.aws_region.current.id}.amazonaws.com"
+  gitops_platform_repo      = "v1/repos/${local.gitops_platform_repo_name}"
 
-  gitops_addons_repo_name  = var.gitops_addons_repo_name
-  gitops_addons_org        = "ssh://${aws_iam_user_ssh_key.gitops.id}@git-codecommit.${data.aws_region.current.id}.amazonaws.com"
-  gitops_addons_repo       = "v1/repos/${local.gitops_addons_repo_name}"
+  gitops_addons_repo_name = var.gitops_addons_repo_name
+  gitops_addons_org       = "ssh://${aws_iam_user_ssh_key.gitops.id}@git-codecommit.${data.aws_region.current.id}.amazonaws.com"
+  gitops_addons_repo      = "v1/repos/${local.gitops_addons_repo_name}"
 
   ssh_key_basepath           = var.ssh_key_basepath
   git_private_ssh_key        = "${local.ssh_key_basepath}/gitops_ssh.pem"
@@ -88,21 +88,6 @@ resource "local_file" "ssh_config" {
   filename        = pathexpand(local.git_private_ssh_key_config)
   file_permission = "0600"
 }
-
-
-# resource "null_resource" "append_string" {
-#   triggers = {
-#     always_run = "${timestamp()}"
-#   }
-
-#   provisioner "local-exec" {
-#     command = <<-EOL
-#       if ! grep -q "${local.ssh_host}" "${pathexpand(local.git_private_ssh_key_config)}"; then
-#         echo "${local.ssh_config}" >> "${pathexpand(local.git_private_ssh_key_config)}"
-#       fi
-#     EOL
-#   }
-# }
 
 resource "null_resource" "append_string_block" {
   count = local.ssh_key_basepath == "/home/ec2-user/.ssh" ? 0 : 1
