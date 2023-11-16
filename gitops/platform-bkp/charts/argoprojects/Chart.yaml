@@ -1,6 +1,0 @@
-apiVersion: v2
-name: project
-description: A Helm Chart to bootstrap ArgoCD project
-version: 1.0.0
-type: application
-
