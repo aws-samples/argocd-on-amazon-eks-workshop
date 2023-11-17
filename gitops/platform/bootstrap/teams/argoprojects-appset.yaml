@@ -14,34 +14,36 @@ spec:
               matchLabels:
                 environment: control-plane
             values:
-              chart: argoprojects
+              addonChart: argocd-apps
+              addonChartVersion: '1.4.1'
+              addonChartRepository: https://argoproj.github.io/argo-helm
         - git:
             repoURL: '{{metadata.annotations.platform_repo_url}}'
             revision: '{{metadata.annotations.platform_repo_revision}}'
             directories:
               - path: '{{metadata.annotations.platform_repo_basepath}}teams/*'
-
   template:
     metadata:
-      name: 'argoprojects-{{metadata.labels.environment}}-{{path.basename}}'
+      name: 'argoprojects-{{path.basename}}'
       labels:
         environment: '{{metadata.labels.environment}}'
         team: '{{path.basename}}'
     spec:
       project: default
-      source:
-        repoURL: '{{metadata.annotations.platform_repo_url}}'
-        path: '{{metadata.annotations.platform_repo_basepath}}charts/{{values.chart}}'
-        targetRevision: '{{metadata.annotations.platform_repo_revision}}'
-        helm:
-          releaseName: '{{path.basename}}'
-          valueFiles:
-          - '../../teams/{{path.basename}}/argoproject-values.yaml'
-          values: |
-            argoProject:
-              spec:
-                sourceRepos:
-                - '{{metadata.annotations.workload_repo_url}}'
+      sources:
+        - repoURL: '{{metadata.annotations.platform_repo_url}}'
+          targetRevision: '{{metadata.annotations.platform_repo_revision}}'
+          ref: values
+        - chart: '{{values.addonChart}}'
+          repoURL: '{{values.addonChartRepository}}'
+          targetRevision: '{{values.addonChartVersion}}'
+          helm:
+            releaseName: 'argoprojects-{{path.basename}}'
+            valueFiles:
+            - '$values/{{metadata.annotations.platform_repo_basepath}}teams/{{path.basename}}/argoproject-values.yaml'
+            parameters:
+              - name: "projects[0].sourceRepos[0]"
+                value: '{{metadata.annotations.workload_repo_url}}'
       destination:
         name: '{{name}}'
       syncPolicy:

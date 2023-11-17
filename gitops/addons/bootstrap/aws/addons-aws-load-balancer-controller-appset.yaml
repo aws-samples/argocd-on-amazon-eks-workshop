@@ -14,7 +14,7 @@ spec:
               values:
                 addonChart: aws-load-balancer-controller
                 # anything not staging or prod use this version
-                addonChartVersion: 1.6.1
+                addonChartVersion: 1.6.2
                 addonChartRepository: https://aws.github.io/eks-charts
               selector:
                 matchExpressions:
