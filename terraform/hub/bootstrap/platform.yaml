@@ -22,7 +22,6 @@ spec:
         targetRevision: '{{metadata.annotations.platform_repo_revision}}'
         directory:
           recurse: true
-          exclude: exclude/*
       destination:
         namespace: 'argocd'
         name: '{{name}}'
