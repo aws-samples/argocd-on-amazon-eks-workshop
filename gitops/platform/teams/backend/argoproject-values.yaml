@@ -1,6 +1,6 @@
 # using upstream argo chart https://github.com/argoproj/argo-helm/tree/main/charts/argocd-apps
 projects:
-- name: guestbook
+- name: backend
   sourceRepos:
   - 'tobereplace'
   namespace: argocd
@@ -62,6 +62,3 @@ projects:
     kind: Table
   - group: 'autoscaling'
     kind: HorizontalPodAutoscaler
-
-
-
