@@ -31,7 +31,7 @@ spec:
     spec:
       project: default
       sources:
-        - repoURL: '{{metadata.annotations.platform_repo_ur}}'
+        - repoURL: '{{metadata.annotations.platform_repo_url}}'
           targetRevision: '{{metadata.annotations.platform_repo_revision}}'
           ref: values
         - chart: '{{values.addonChart}}'
@@ -40,7 +40,7 @@ spec:
           helm:
             releaseName: 'argoprojects-{{path.basename}}'
             valueFiles:
-            - '$values/gitops/platform/teams/{{path.basename}}/argoproject-values.yaml'
+            - '$values/{{metadata.annotations.platform_repo_basepath}}teams/{{path.basename}}/argoproject-values.yaml'
             parameters:
               - name: "projects[0].sourceRepos[0]"
                 value: '{{metadata.annotations.workload_repo_url}}'
