@@ -57,6 +57,8 @@ server:
       service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
 
 configs:
+  params:
+    server.insecure: true
   repositories:
     # Required when using helm repository with oci formal like karpenter and aws-gateway-api-controller
     aws-public-ecr:
