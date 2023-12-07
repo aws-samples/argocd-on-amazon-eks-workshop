@@ -1,9 +1,10 @@
 ## ArgoCD on Amazon EKS Workshop
 
-:construction: WORK IN PROGRESS :construction:
+This workshop covers Application deployment (both runtime and infrastructure services) and Addons management in a multi-cluster scenario, where a single Argo CD (hub) cluster manages the deployment to all other workload clusters (spokes) in the organization
 
-[Register for AWS re:Invent 2023 Session 402](https://hub.reinvent.awsevents.com/attendee-portal/catalog/?search=con402) to attend the full version of the workshop
+For a detailed information, please use this [guided workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/e36277ba-4094-4df4-b62f-d1e655800123/en-US) to walk you through all the details including architecture decisions been made while building this workshop.
 
+For any feedback, please open a [Bug](https://github.com/aws-samples/argocd-on-amazon-eks-workshop/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=) or [Feature](https://github.com/aws-samples/argocd-on-amazon-eks-workshop/issues/new?assignees=&labels=&projects=&template=feature_request.md&title=) issue in this repository.
 
 ## Use Cases
 
