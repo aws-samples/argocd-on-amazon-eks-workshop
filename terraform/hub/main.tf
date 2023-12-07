@@ -1,6 +1,13 @@
 data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {}
 data "aws_region" "current" {}
+data "aws_iam_session_context" "current" {
+  # This data source provides information on the IAM source role of an STS assumed role
+  # For non-role ARNs, this data source simply passes the ARN through issuer ARN
+  # Ref https://github.com/terraform-aws-modules/terraform-aws-eks/issues/2327#issuecomment-1355581682
+  # Ref https://github.com/hashicorp/terraform-provider-aws/issues/28381
+  arn = data.aws_caller_identity.current.arn
+}
 
 provider "helm" {
   kubernetes {
@@ -29,27 +36,27 @@ provider "kubernetes" {
 }
 
 locals {
-  name                   = "hub-cluster"
-  environment            = "control-plane"
-  region                 = data.aws_region.current.id
-  cluster_version        = var.kubernetes_version
-  vpc_cidr               = var.vpc_cidr
+  name            = "hub-cluster"
+  environment     = "control-plane"
+  region          = data.aws_region.current.id
+  cluster_version = var.kubernetes_version
+  vpc_cidr        = var.vpc_cidr
 
-  gitops_addons_org      = data.terraform_remote_state.git.outputs.gitops_addons_org
   gitops_addons_url      = data.terraform_remote_state.git.outputs.gitops_addons_url
   gitops_addons_basepath = data.terraform_remote_state.git.outputs.gitops_addons_basepath
   gitops_addons_path     = data.terraform_remote_state.git.outputs.gitops_addons_path
   gitops_addons_revision = data.terraform_remote_state.git.outputs.gitops_addons_revision
 
-  gitops_platform_org      = data.terraform_remote_state.git.outputs.gitops_platform_org
   gitops_platform_url      = data.terraform_remote_state.git.outputs.gitops_platform_url
+  gitops_platform_basepath = data.terraform_remote_state.git.outputs.gitops_platform_basepath
   gitops_platform_path     = data.terraform_remote_state.git.outputs.gitops_platform_path
   gitops_platform_revision = data.terraform_remote_state.git.outputs.gitops_platform_revision
 
-  gitops_workload_org      = data.terraform_remote_state.git.outputs.gitops_workload_org
   gitops_workload_url      = data.terraform_remote_state.git.outputs.gitops_workload_url
+  gitops_workload_basepath = data.terraform_remote_state.git.outputs.gitops_workload_basepath
   gitops_workload_path     = data.terraform_remote_state.git.outputs.gitops_workload_path
   gitops_workload_revision = data.terraform_remote_state.git.outputs.gitops_workload_revision
+
 
   git_private_ssh_key = data.terraform_remote_state.git.outputs.git_private_ssh_key
 
@@ -86,7 +93,7 @@ locals {
     #enable_ingress_nginx                         = true
     #enable_kyverno                               = true
     #enable_kube_prometheus_stack                 = true
-    #enable_metrics_server = true
+    enable_metrics_server = true
     #enable_prometheus_adapter                    = true
     #enable_secrets_store_csi_driver              = true
     #enable_vpa                                   = true
@@ -114,15 +121,21 @@ locals {
     },
     {
       platform_repo_url      = local.gitops_platform_url
+      platform_repo_basepath = local.gitops_platform_basepath
       platform_repo_path     = local.gitops_platform_path
       platform_repo_revision = local.gitops_platform_revision
+    },
+    {
+      workload_repo_url      = local.gitops_workload_url
+      workload_repo_basepath = local.gitops_workload_basepath
+      workload_repo_path     = local.gitops_workload_path
+      workload_repo_revision = local.gitops_workload_revision
     }
   )
 
   argocd_apps = {
-    addons = file("${path.module}/bootstrap/addons.yaml")
+    addons   = file("${path.module}/bootstrap/addons.yaml")
     platform = file("${path.module}/bootstrap/platform.yaml")
-    workloads = file("${path.module}/bootstrap/workloads.yaml")
   }
 
   azs = slice(data.aws_availability_zones.available.names, 0, 3)
@@ -146,21 +159,21 @@ resource "kubernetes_secret" "git_secrets" {
   depends_on = [kubernetes_namespace.argocd]
   for_each = {
     git-addons = {
-      type          = "git"
-      url           = local.gitops_addons_url
-      sshPrivateKey = file(pathexpand(local.git_private_ssh_key))
+      type                  = "git"
+      url                   = local.gitops_addons_url
+      sshPrivateKey         = file(pathexpand(local.git_private_ssh_key))
       insecureIgnoreHostKey = "true"
     }
     git-platform = {
-      type          = "git"
-      url           = local.gitops_platform_url
-      sshPrivateKey = file(pathexpand(local.git_private_ssh_key))
+      type                  = "git"
+      url                   = local.gitops_platform_url
+      sshPrivateKey         = file(pathexpand(local.git_private_ssh_key))
       insecureIgnoreHostKey = "true"
     }
     git-workloads = {
-      type          = "git"
-      url           = local.gitops_workload_url
-      sshPrivateKey = file(pathexpand(local.git_private_ssh_key))
+      type                  = "git"
+      url                   = local.gitops_workload_url
+      sshPrivateKey         = file(pathexpand(local.git_private_ssh_key))
       insecureIgnoreHostKey = "true"
     }
 
@@ -179,18 +192,26 @@ resource "kubernetes_secret" "git_secrets" {
 # GitOps Bridge: Bootstrap
 ################################################################################
 module "gitops_bridge_bootstrap" {
-  source = "github.com/gitops-bridge-dev/gitops-bridge-argocd-bootstrap-terraform?ref=v2.0.0"
-
+  source  = "gitops-bridge-dev/gitops-bridge/helm"
+  version = "0.0.1"
   cluster = {
     cluster_name = module.eks.cluster_name
     environment  = local.environment
     metadata     = local.addons_metadata
     addons       = local.addons
   }
-  apps       = local.argocd_apps
-  argocd     = {
-    namespace = local.argocd_namespace
+  apps = local.argocd_apps
+  argocd = {
+    namespace        = local.argocd_namespace
+    chart_version    = "5.51.1"
+    timeout          = 600
     create_namespace = false
+    set = [
+      {
+        name  = "server.service.type"
+        value = "LoadBalancer"
+      }
+    ]
   }
   depends_on = [kubernetes_secret.git_secrets]
 }
@@ -283,6 +304,16 @@ module "eks" {
   cluster_version                = local.cluster_version
   cluster_endpoint_public_access = true
 
+  # Combine root account, current user/role and additinoal roles to be able to access the cluster KMS key - required for terraform updates
+  kms_key_administrators = distinct(concat([
+    "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"],
+    var.kms_key_admin_roles,
+    [data.aws_iam_session_context.current.issuer_arn]
+
+  ))
+  # Manage aws-auth configmap to be able to add workshop roles into it
+  manage_aws_auth_configmap = true
+  aws_auth_roles            = var.aws_auth_roles
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets

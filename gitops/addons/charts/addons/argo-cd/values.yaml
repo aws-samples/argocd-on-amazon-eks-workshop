@@ -57,6 +57,8 @@ server:
       service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
 
 configs:
+  params:
+    server.insecure: true
   repositories:
     # Required when using helm repository with oci formal like karpenter and aws-gateway-api-controller
     aws-public-ecr:
@@ -65,6 +67,9 @@ configs:
       url: public.ecr.aws
       enableOCI: 'true'
   cm:
+    # -- Timeout to discover if a new manifests version got published to the repository
+    # Only for workshop or demos set to a low value
+    timeout.reconciliation: 30s
     application.resourceTrackingMethod: 'annotation' #use annotation for tracking required for Crossplane
     resource.exclusions: |
       - kinds:

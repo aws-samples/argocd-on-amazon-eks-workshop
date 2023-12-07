@@ -45,4 +45,6 @@ go.sum
 .DS_Store
 
 # Workshop specific
-codecommit/
+/codecommit-repo/
+/environment/
+/gitops-repos/

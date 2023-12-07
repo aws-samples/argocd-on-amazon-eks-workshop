@@ -6,15 +6,6 @@ SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOTDIR="$(cd ${SCRIPTDIR}/../..; pwd )"
 [[ -n "${DEBUG:-}" ]] && set -x
 
-
-pushd () {
-    command pushd "$@" > /dev/null
-}
-
-popd () {
-    command popd "$@" > /dev/null
-}
-
 if [[ $# -eq 0 ]] ; then
     echo "No arguments supplied"
     echo "Usage: deploy.sh <environment>"
@@ -23,13 +14,9 @@ if [[ $# -eq 0 ]] ; then
 fi
 env=$1
 
-pushd ${SCRIPTDIR}
-
 echo "Deploying $env with "workspaces/${env}.tfvars" ..."
 
-terraform workspace new $env || true
-terraform workspace select $env
-terraform init --upgrade
-terraform apply -var-file="workspaces/${env}.tfvars" -auto-approve
-
-popd
+terraform -chdir=$SCRIPTDIR init --upgrade
+terraform -chdir=$SCRIPTDIR workspace new $env || true
+terraform -chdir=$SCRIPTDIR workspace select $env
+terraform -chdir=$SCRIPTDIR apply -var-file="workspaces/${env}.tfvars" -auto-approve
