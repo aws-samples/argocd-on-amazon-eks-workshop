@@ -23,7 +23,7 @@ export AWS_DEFAULT_REGION="us-west-2"
 export WORKING_DIR="$HOME/environment" #For local dev; export WORKING_DIR="$PWD/environment"
 export WORKSHOP_DIR="$WORKING_DIR/argocd-on-amazon-eks-workshop" #For local dev; export WORKSHOP_DIR="$PWD"
 export GITOPS_DIR="$WORKING_DIR/gitops-repos"
-git clone -b riv23 https://github.com/aws-samples/argocd-on-amazon-eks-workshop $WORKSHOP_DIR
+git clone https://github.com/aws-samples/argocd-on-amazon-eks-workshop $WORKSHOP_DIR
 cd $WORKSHOP_DIR
 ./install.sh
 ```
